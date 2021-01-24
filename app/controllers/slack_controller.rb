@@ -10,4 +10,5 @@ class SlackController < ApplicationController
     when 'event_callback'
       # something
     end
+  end
 end
