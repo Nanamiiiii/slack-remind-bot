@@ -13,4 +13,27 @@ class SlackController < ApplicationController
     json_hash  = params[:slack]
     Body::TestService.new(json_hash).execute
   end
+
+  def commands
+    # slashコマンドの処理
+  end
+
+  def reminder
+    reminders = get_reminders
+    logger.info(reminders)
+    
+    Client::SlackClient.new()
+    reminders.each do |reminder|
+      Client::SlackClient.snd_msg('schedule', reminder)
+    end
+  end
+
+  def get_reminders
+    remind_service.check_reminder
+  end
+
+  def remind_service
+    RemindService.new
+  end
+
 end
