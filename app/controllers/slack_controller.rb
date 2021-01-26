@@ -1,5 +1,6 @@
 class SlackController < ApplicationController
   def index
+    # something
   end
 
   def create
@@ -16,15 +17,19 @@ class SlackController < ApplicationController
 
   def commands
     # slashコマンドの処理
+    @body = JSON.parse(request.body.read)
+    # TODO: リクエスト認証
+
+    command_service.execute(@body)
+
   end
 
   def reminder
     reminders = get_reminders
     logger.info(reminders)
     
-    Client::SlackClient.new()
     reminders.each do |reminder|
-      Client::SlackClient.snd_msg('schedule', reminder)
+      slack_client.send_msg('#schedule', reminder)
     end
   end
 
@@ -34,6 +39,14 @@ class SlackController < ApplicationController
 
   def remind_service
     RemindService.new
+  end
+
+  def command_service
+    CommandService.new
+  end
+
+  def slack_client
+    @slack_client ||== Client::SlackClient.new()
   end
 
 end

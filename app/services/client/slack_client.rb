@@ -19,5 +19,14 @@ module Client
       @cli.post '/api/chat.postMessage', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
     end
 
+    def send_block(channel, block)
+      snd_data = {
+        :token => SALCK_BOT_USER_TOKEN,
+        :channel => channel,
+        :blocks => block
+      }
+      @cli.post '/api/chat.postMessage', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+    end
+    
   end
 end
