@@ -65,11 +65,11 @@ class CommandService
                 return
             end
 
-            remind_time = "#{hour}:#{min}"
+            remind_time = get_time_s(hour, min)
             @weekly_model.create(day: wday, remind_time: remind_time, offset: offset, place: place)
             
             wday_s = get_wday_string(wday)
-            msg = "定期リマインドを `#{wday_s}` `#{remind_time}` の`#{offset}`時間前に設定しました．"
+            msg = "定期リマインドを `#{wday_s} - #{remind_time}` の `#{offset}時間前` に設定しました．"
             block = [
                 {
                     :type => "section",
@@ -232,5 +232,22 @@ class CommandService
     def slack_client
         @slack_client ||= Client::SlackClient.new()
     end
+
+    def get_time_s(hour, min)
+        # generate time string
+        if hour/10 == 0
+          hour_s = "0#{hour}"
+        else
+          hour_s = "#{hour}"
+        end
+    
+        if min/10 == 0
+          min_s = "0#{min}"
+        else
+          min_s = "#{min}"
+        end
+    
+        return "#{hour_s}:#{min_s}"
+      end
 
 end
