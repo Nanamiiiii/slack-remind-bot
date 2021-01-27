@@ -40,13 +40,13 @@ class CommandService
 
             # user certification
             if !(certificate(user_id))
-                err_ret(0)
+                err_ret(0, channel)
                 return
             end
 
             # argument check: number, type
             if raw_text.length != 5 || !(raw_text[1].instance_of?(Integer)) || !(raw_text[2].instance_of?(Integer)) || !(raw_text[3].instance_of?(Integer)) || !(raw_text[4].instance_of?(Integer)) || !(raw_text[5].instance_of?(String))
-                err_ret(1)
+                err_ret(1, channel)
                 return
             end
 
@@ -58,7 +58,7 @@ class CommandService
 
             # argument check: range
             if wday < 0 || wday > 6 || hour < 0 || hour > 23 || min < 0 || min > 59
-                err_ret(1)
+                err_ret(1, channel)
                 return
             end
 
@@ -215,7 +215,7 @@ class CommandService
         return false
     end
 
-    def err_ret(num)
+    def err_ret(num, channel)
         # send errors
         case num
         when 0
