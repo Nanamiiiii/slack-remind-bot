@@ -25,7 +25,7 @@ class CommandService
             if !(certificate_without_v(user_id))
                 # user not exist
                 @user_model.create(slack_id: user_id, validate: false)
-                msg = '#{user_name}を登録しました．管理者による有効化後に利用できます．'
+                msg = "#{user_name}を登録しました．管理者による有効化後に利用できます．"
             else
                 # prevent multiple registration
                 msg = 'Error: すでに登録ユーザーです．'
@@ -146,7 +146,8 @@ class CommandService
 
             slack_client.send_block(channel, block)
 
-        when 'delete'
+        when 'delete' config.assets.compile = true
+            config.assets.initialize_on_precompile=false
             # TODO: implement delete method (maybe integrate show method)
         else
             # invalid argument (give information)
