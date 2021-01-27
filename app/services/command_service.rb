@@ -24,7 +24,7 @@ class CommandService
 
             if !(certificate_without_v(user_id))
                 # user not exist
-                @user_model.create(slack_id: user_id, validate: false)
+                @user_model.create(slack_id: user_id, valid_user: false)
                 msg = "#{user_name}を登録しました．管理者による有効化後に利用できます．"
             else
                 # prevent multiple registration
@@ -196,7 +196,7 @@ class CommandService
     def certificate(user_id)
         # user certification
         @user_model.find_each do |model|
-            if user_id == model.slack_id && model.validate
+            if user_id == model.slack_id && model.valid_user
                 return true
             end
         end
