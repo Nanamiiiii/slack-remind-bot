@@ -34,7 +34,7 @@ class WeeklyService
       puts now_hour == rem_h
 
       if day_of_week == remind_day && now_hour == rem_h
-        "@channel 今日の活動は`#{sc_h}:#{sc_m}`- `#{place}`です．"
+        return "@channel 今日の活動は`#{sc_h}:#{sc_m}`- `#{place}`です．"
       end
     end
   end

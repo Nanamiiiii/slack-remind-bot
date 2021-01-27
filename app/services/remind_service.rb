@@ -16,7 +16,7 @@ class RemindService
   end
 
   def check_weekly_reminder
-    @weekly_service.reminder(@today)
+    return @weekly_service.reminder(@today)
   end
 
 end
