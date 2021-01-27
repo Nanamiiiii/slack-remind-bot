@@ -8,14 +8,14 @@ class CommandService
         @user_model = user_model
     end
 
-    def execute(json)
+    def execute(req)
         
         # get some param from json
-        @json = json
-        raw_text = @json['text'].split(" ")
-        user_id = @json['user_id']
-        user_name = @json['user_name']
-        channel = @json['channel_id']
+        @req = req
+        raw_text = @req.assoc.('text').last.split(" ")
+        user_id = @req.asso('user_id').last
+        user_name = @req.assoc('user_name').last
+        channel = @req.assoc('channel_id').last
 
         case raw_text[0]
         when 'regist'
