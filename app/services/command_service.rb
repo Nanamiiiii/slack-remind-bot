@@ -45,7 +45,8 @@ class CommandService
             end
 
             # argument check: number, type
-            if raw_text.length != 5 || !(raw_text[1].instance_of?(Integer)) || !(raw_text[2].instance_of?(Integer)) || !(raw_text[3].instance_of?(Integer)) || !(raw_text[4].instance_of?(Integer)) || !(raw_text[5].instance_of?(String))
+            if raw_text.length != 6 || !(raw_text[1].instance_of?(Integer)) || !(raw_text[2].instance_of?(Integer)) || !(raw_text[3].instance_of?(Integer)) || !(raw_text[4].instance_of?(Integer)) || !(raw_text[5].instance_of?(String))
+
                 err_ret(1, channel)
                 return
             end
