@@ -6,7 +6,7 @@ module Client
       @cli = Faraday::Connection.new(:url => 'https://slack.com') do |builder|
         builder.use Faraday::Request::UrlEncoded
         builder.use Faraday::Response::Logger
-        builder.use Faraday::Adapter::NetHttp
+        builder.adapter Faraday::Adapter::NetHttp
       end
     end
     
