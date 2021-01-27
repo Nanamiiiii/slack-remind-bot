@@ -21,7 +21,7 @@ module Client
 
     def send_block(channel, block)
       snd_data = {
-        :token => SALCK_BOT_USER_TOKEN,
+        :token => SLACK_BOT_USER_TOKEN,
         :channel => channel,
         :blocks => block
       }
