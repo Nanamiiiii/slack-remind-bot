@@ -31,7 +31,7 @@ class SlackController < ApplicationController
     logger.info(reminders)
     
     reminders.each do |reminder|
-      slack_client.send_msg('#schedule', reminder)
+      slack_client.send_msg('schedule', reminder)
     end
   end
 

@@ -40,25 +40,27 @@ class CommandService
 
             # user certification
             if !(certificate(user_id))
+                logger.debug('# Setting regular reminder: Not certificated user')
                 err_ret(0, channel)
                 return
             end
 
             # argument check: number, type
-            if raw_text.length != 6 || !(raw_text[1].instance_of?(Integer)) || !(raw_text[2].instance_of?(Integer)) || !(raw_text[3].instance_of?(Integer)) || !(raw_text[4].instance_of?(Integer)) || !(raw_text[5].instance_of?(String))
-
+            if raw_text.length != 6 || !(raw_text[1] =~ /^[0-9]+$/) || !(raw_text[2] =~ /^[0-9]+$/) || !(raw_text[3] =~ /^[0-9]+$/) || !(raw_text[4] =~ /^[0-9]+$/)
+                logger.debug('# Setting regular reminder: Argument number or type error')
                 err_ret(1, channel)
                 return
             end
 
-            wday = raw_text[1]
-            hour = raw_text[2]
-            min = raw_text[3]
-            offset = raw_text[4]
+            wday = raw_text[1].to_i
+            hour = raw_text[2].to_i
+            min = raw_text[3].to_i
+            offset = raw_text[4].to_i
             place = raw_text[5]
 
             # argument check: range
             if wday < 0 || wday > 6 || hour < 0 || hour > 23 || min < 0 || min > 59
+                logger.debug('# Setting regular reminder: range error')
                 err_ret(1, channel)
                 return
             end
