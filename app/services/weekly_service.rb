@@ -11,7 +11,7 @@ class WeeklyService
     day_of_week = today.wday
     now_hour = today.hour
     now_minute = today.min
-    printf("%d %d %d", day_of_week, now_hour, now_minute)
+    printf("%d %d %d\n", day_of_week, now_hour, now_minute)
 
     @weekly_model.find_each do |model|
       puts model.remind_time
@@ -21,7 +21,7 @@ class WeeklyService
       offset = model.offset
       place = model.place
 
-      printf("%d %d %d %d %s", remind_day, sc_h, sc_m, offset, place)
+      printf("%d %d %d %d %s\n", remind_day, sc_h, sc_m, offset, place)
       
       rem_h = sc_h - offset
       if rem_h < 0
@@ -29,6 +29,8 @@ class WeeklyService
         day_of_week -= 1
       end
 
+      puts rem_h
+      
       if day_of_week == remind_day && now_hour == rem_h
         "@channel 今日の活動は`#{sc_h}:#{sc_m}`- `#{place}`です．"
       end
