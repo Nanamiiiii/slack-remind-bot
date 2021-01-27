@@ -25,7 +25,7 @@ class WeeklyService
       end
 
       if day_of_week == remind_day && now_hour == rem_h
-        "@channel 今日の活動は#{sc_h}:#{sc_m}- #{place}です．"
+        "@channel 今日の活動は`#{sc_h}:#{sc_m}`- `#{place}`です．"
       end
     end
   end

@@ -25,7 +25,7 @@ class CommandService
             if !(certificate_without_v(user_id))
                 # user not exist
                 @user_model.create(slack_id: user_id, valid_user: false)
-                msg = "#{user_name}を登録しました．管理者による有効化後に利用できます．"
+                msg = "`#{user_name}`を登録しました．管理者による有効化後に利用できます．"
             else
                 # prevent multiple registration
                 msg = 'Error: すでに登録ユーザーです．'
@@ -65,11 +65,11 @@ class CommandService
                 return
             end
 
-            remind_time = '#{hour}:#{min}'
+            remind_time = "#{hour}:#{min}"
             @weekly_model.create(day: wday, remind_time: remind_time, offset: offset, place: place)
             
             wday_s = get_wday_string(wday)
-            msg = "定期リマインドを '#{wday_s}' '#{remind_time}' の'#{offset}'時間前に設定しました．"
+            msg = "定期リマインドを `#{wday_s}` `#{remind_time}` の`#{offset}`時間前に設定しました．"
             block = [
                 {
                     :type => "section",
