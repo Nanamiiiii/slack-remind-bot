@@ -12,8 +12,8 @@ class CommandService
         
         # get some param from json
         @req = req
-        raw_text = @req.assoc.('text').last.split(" ")
-        user_id = @req.asso('user_id').last
+        raw_text = @req.assoc('text').last.split(" ")
+        user_id = @req.assoc('user_id').last
         user_name = @req.assoc('user_name').last
         channel = @req.assoc('channel_id').last
 
