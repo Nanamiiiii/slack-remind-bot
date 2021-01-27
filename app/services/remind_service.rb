@@ -10,9 +10,11 @@ class RemindService
 
     weekly_reminder = check_weekly_reminder
 
-    reminders << weekly_reminder if weekly_reminder.present?
+    weekly_reminder.each do |reminder|
+      reminders << reminder
+    end
 
-    reminders
+    return reminders
   end
 
   def check_weekly_reminder

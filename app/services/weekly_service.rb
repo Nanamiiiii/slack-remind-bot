@@ -11,17 +11,16 @@ class WeeklyService
     day_of_week = today.wday
     now_hour = today.hour
     now_minute = today.min
-    printf("%d %d %d\n", day_of_week, now_hour, now_minute)
+
+    ret = []
 
     @weekly_model.find_each do |model|
-      puts model.remind_time
+      
       remind_day = model.day
       sc_h = model.remind_time.hour
       sc_m = model.remind_time.min
       offset = model.offset
       place = model.place
-
-      printf("%d %d %d %d %s\n", remind_day, sc_h, sc_m, offset, place)
       
       rem_h = sc_h - offset
       if rem_h < 0
@@ -29,14 +28,32 @@ class WeeklyService
         day_of_week -= 1
       end
 
-      puts rem_h
-      puts day_of_week == remind_day
-      puts now_hour == rem_h
+      time_s = get_time_s(sc_h, sc_m)
 
       if day_of_week == remind_day && now_hour == rem_h
-        return "@channel 今日の活動は`#{sc_h}:#{sc_m}`- `#{place}`です．"
+        ret << "<!channel> 今日の活動は `#{time_s}` - `#{place}` です．"
       end
     end
+
+    return ret
+    
+  end
+
+  def get_time_s(hour, min)
+    # generate time string
+    if hour/10 == 0
+      hour_s = "0#{hour}"
+    else
+      hour_s = "#{hour}"
+    end
+
+    if min/10 == 0
+      min_s = "0#{min}"
+    else
+      min_s = "#{min}"
+    end
+
+    return "#{hour_s}:#{min_s}"
   end
 
 end
