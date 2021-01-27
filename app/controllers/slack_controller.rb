@@ -36,7 +36,7 @@ class SlackController < ApplicationController
   end
 
   def get_reminders
-    remind_service.check_reminder
+    remind_service.check_reminders
   end
 
   def remind_service
