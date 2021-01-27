@@ -46,7 +46,7 @@ class SlackController < ApplicationController
   end
 
   def slack_client
-    @slack_client ||== Client::SlackClient.new()
+    @slack_client ||= Client::SlackClient.new()
   end
 
 end

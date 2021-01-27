@@ -40,13 +40,13 @@ class CommandService
 
             # user certification
             if !(certificate(user_id))
-                err_ret
+                err_ret(0)
                 return
             end
 
             # argument check: number, type
             if raw_text.length != 5 || !(raw_text[1].instance_of?(Integer)) || !(raw_text[2].instance_of?(Integer)) || !(raw_text[3].instance_of?(Integer)) || !(raw_text[4].instance_of?(Integer)) || !(raw_text[5].instance_of?(String))
-                err_ret
+                err_ret(1)
                 return
             end
 
@@ -58,7 +58,7 @@ class CommandService
 
             # argument check: range
             if wday < 0 || wday > 6 || hour < 0 || hour > 23 || min < 0 || min > 59
-                err_ret
+                err_ret(1)
                 return
             end
 
@@ -101,6 +101,10 @@ class CommandService
 
             # generate block kit object
             block = []
+            divider = {
+                :type => "divider"
+            }
+
             @weekly_model.find_each do |model|
                 id = model.id
                 wday_s = get_wday_string(model.day)
@@ -137,6 +141,7 @@ class CommandService
                 }
                 
                 block << section
+                block << divider
             end
 
             slack_client.send_block(channel, block)
@@ -144,7 +149,25 @@ class CommandService
         when 'delete'
             # TODO: implement delete method (maybe integrate show method)
         else
-            # invalid argument (describe argument)
+            # invalid argument (give information)
+            block = [
+                {
+                    :type => "section",
+                    :text => {
+                        :type => "plain_text",
+                        :text => "引数のフォーマットは以下のようになっています．",
+                        :emoji => true
+                    }
+                },
+                {
+                    :type => "section",
+                    :text => {
+                        :type => "mrkdwn",
+                        :text => "*regist* ユーザーの登録\n*regular {day} {hour} {min} {offset} {place}* 定期リマインドの登録\n*show* 現在の設定の表示"
+                    }
+                }
+            ]
+            slack_client.send_block(channel,block)
         end
 
     end
@@ -167,18 +190,40 @@ class CommandService
             wday_s = 'Sat'
         end
 
-        wday_s
+        return wday_s
     end
 
     def certificate(user_id)
         # user certification
+        @user_model.find_each do |model|
+            if user_id == model.slack_id && model.validate
+                return true
+            end
+        end
+
+        return false
     end
 
     def certificate_without_v(user_id)
         # user certification without validation
+        @user_model.find_each do |model|
+            if user_id == model.slack_id
+                return true
+            end
+        end
+
+        return false
     end
 
-    def err_ret
+    def err_ret(num)
+        # send errors
+        case num
+        when 0
+            msg = 'Error: 権限がありません．'
+        when 1
+            msg = 'Error: 無効な引数です．'
+        end
+        slack_client.send_msg(channel, msg)
     end
 
     def slack_client
