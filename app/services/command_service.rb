@@ -146,8 +146,7 @@ class CommandService
 
             slack_client.send_block(channel, block)
 
-        when 'delete' config.assets.compile = true
-            config.assets.initialize_on_precompile=false
+        when 'delete'
             # TODO: implement delete method (maybe integrate show method)
         else
             # invalid argument (give information)
