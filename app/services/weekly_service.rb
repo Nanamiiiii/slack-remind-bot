@@ -7,11 +7,13 @@ class WeeklyService
   end
 
   def reminder(today)
+    logger.info(today)
     day_of_week = today.wday
     now_hour = today.hour
     now_minute = today.min
 
-    (@weekly_model).find_each do |model|
+    @weekly_model.find_each do |model|
+      logger.info(model.remind_time)
       remind_day = model.day
       sc_h = model.remind_time.hour
       sc_m = model.remind_time.min
