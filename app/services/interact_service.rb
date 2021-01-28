@@ -24,6 +24,9 @@ class InteractService
                 record_id = act_id.slice('regular_').to_i
                 
                 delete_weekly(record_id)
+
+                msg = "リマインド設定を削除しました．"
+                slack_client.send_msg(channel, msg)
             end
         end
     end
@@ -31,10 +34,7 @@ class InteractService
     def delete_weekly(record_id)
         # delete record by id
         @weekly_model.destroy_by(id: record_id)
-
         puts "Record Deletion: Succeeded! Deleted record id:#{record_id} from Weekly."
-        msg = "リマインド設定を削除しました．"
-        slack_client.send_msg(channel, msg)
     end
 
     def slack_client
