@@ -3,6 +3,7 @@ require_relative '../models/user'
 require_relative '../models/weekly'
 
 class CommandService
+
     def initialize(weekly_model = Weekly, user_model = User)
         @weekly_model = weekly_model
         @user_model = user_model
@@ -10,7 +11,7 @@ class CommandService
 
     def execute(req)
         
-        # get some param from json
+        # get some param from [key, value] array
         @req = req
         raw_text = @req.assoc('text').last.split(" ")
         user_id = @req.assoc('user_id').last
@@ -40,14 +41,14 @@ class CommandService
 
             # user certification
             if !(certificate(user_id))
-                logger.debug('# Setting regular reminder: Not certificated user')
+                puts '# Setting regular reminder: Not certificated user'
                 err_ret(0, channel)
                 return
             end
 
             # argument check: number, type
             if raw_text.length != 6 || !(raw_text[1] =~ /^[0-9]+$/) || !(raw_text[2] =~ /^[0-9]+$/) || !(raw_text[3] =~ /^[0-9]+$/) || !(raw_text[4] =~ /^[0-9]+$/)
-                logger.debug('# Setting regular reminder: Argument number or type error')
+                puts '# Setting regular reminder: Argument number or type error'
                 err_ret(1, channel)
                 return
             end
@@ -60,7 +61,7 @@ class CommandService
 
             # argument check: range
             if wday < 0 || wday > 6 || hour < 0 || hour > 23 || min < 0 || min > 59
-                logger.debug('# Setting regular reminder: range error')
+                puts '# Setting regular reminder: range error'
                 err_ret(1, channel)
                 return
             end
@@ -116,13 +117,15 @@ class CommandService
                 offset = model.offset
                 place = model.place
 
+                time_s = get_time_s(time_h, time_m)
+
                 section = {
 
                     :type => "section",
                     :fields => [
                         {
                             :type => "mrkdwn",
-                            :text => "*No:*\n#{id + 1}"
+                            :text => "*ID:*\n#{id}"
                         },
                         {
                             :type => "mrkdwn",
@@ -130,7 +133,7 @@ class CommandService
                         },
                         {
                             :type => "mrkdwn",
-                            :text => "*時刻:*\n#{time_h}:#{time_m}"
+                            :text => "*時刻:*\n#{time_s}"
                         },
                         {
                             :type => "mrkdwn",
@@ -142,15 +145,40 @@ class CommandService
                         }
                     ]
                 }
+
+                buttons = {
+                    :type => "actions",
+                    :elements => [
+                        {
+                            :type => "button",
+                            :text => {
+                                :type => "plain_text",
+                                :text => "削除",
+                                :emoji => true
+                            },
+                            :value => "click_me_123",
+                            :action_id => "delete_rec_#{id}"
+                        },
+                        {
+                            :type => "button",
+                            :text => {
+                                :type => "plain_text",
+                                :text => "編集",
+                                :emoji => true
+                            },
+                            :value => "click_me_123",
+                            :action_id => "modify_rec_#{id}"
+                        }
+                    ]
+                }
                 
                 block << section
+                block << buttons
                 block << divider
             end
 
             slack_client.send_block(channel, block)
 
-        when 'delete'
-            # TODO: implement delete method (maybe integrate show method)
         else
             # invalid argument (give information)
             block = [
