@@ -13,6 +13,7 @@ class CommandService
         
         # get some param from [key, value] array
         @req = req
+
         raw_text = @req.assoc('text').last.split(" ")
         user_id = @req.assoc('user_id').last
         user_name = @req.assoc('user_name').last
@@ -34,7 +35,7 @@ class CommandService
             end
 
             # reply
-            slack_client.send_msg(channel, msg)
+            slack_client.send_msg(user_id, msg)
 
         when 'regular'
             # set regular reminder
@@ -78,7 +79,7 @@ class CommandService
             end
 
             block = gen_remind_list
-            slack_client.send_block(channel, block)
+            slack_client.send_block(user_id, block)
 
         else
             # invalid argument (give information)
@@ -95,11 +96,11 @@ class CommandService
                     :type => "section",
                     :text => {
                         :type => "mrkdwn",
-                        :text => "*regist* ユーザーの登録\n*regular {day} {hour} {min} {offset} {place}* 定期リマインドの登録\n*show* 現在の設定の表示"
+                        :text => "*regist* ユーザーの登録\n*regular* 定期リマインドの登録\n*show* 現在の設定の表示"
                     }
                 }
             ]
-            slack_client.send_block(channel,block)
+            slack_client.send_block(user_id, block)
         end
 
     end
@@ -316,17 +317,8 @@ class CommandService
                             :emoji => true
                         },
                         :value => "click_me_123",
-                        :action_id => "delete_rec_regular_#{id}"
-                    },
-                    {
-                        :type => "button",
-                        :text => {
-                            :type => "plain_text",
-                            :text => "編集",
-                            :emoji => true
-                        },
-                        :value => "click_me_123",
-                        :action_id => "modify_rec_regular_#{id}"
+                        :action_id => "delete_rec_regular_#{id}",
+                        :style => "danger"
                     }
                 ]
             }
