@@ -1,5 +1,7 @@
 class SlackController < ApplicationController
 
+  SLACK_SIGNING_SECRET = ENV['SLACK_SIGNING_SECRET']
+
   # POST /
   def index
     # something
@@ -10,7 +12,6 @@ class SlackController < ApplicationController
     # slashコマンドの処理
     # verify
     request_body = request.body.read
-    SLACK_SIGNING_SECRET = ENV['SLACK_SIGNING_SECRET']
     timestamp = request.header['X-Slack-Request-Timestamp']
     signature = request.header['X-Slack-Signature']
     sig_base = "v0:#{timestamp}:#{request_body}"
