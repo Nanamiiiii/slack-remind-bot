@@ -1,8 +1,11 @@
 class SlackController < ApplicationController
+
+  # POST /
   def index
     # something
   end
 
+  # POST /recieve (not in use)
   def create
     @body = JSON.parse(request.body.read)
     case @body['type']
@@ -11,10 +14,11 @@ class SlackController < ApplicationController
     when 'event_callback'
       # something
     end
-    json_hash  = params[:slack]
-    Body::TestService.new(json_hash).execute
+    # json_hash  = params[:slack]
+    # Body::TestService.new(json_hash).execute
   end
 
+  # POST /commands
   def commands
     # slashコマンドの処理
     # @body = JSON.parse(request.body.read)
@@ -26,6 +30,14 @@ class SlackController < ApplicationController
 
   end
 
+  # POST /interact
+  def interact
+    # interaction element
+    req = URI.decode_www_form(request.body.read)
+    logger.info(req)
+  end
+
+  # Rake Task: reminder check
   def reminder
     reminders = get_reminders
     logger.info(reminders)
