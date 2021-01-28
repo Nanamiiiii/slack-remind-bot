@@ -21,7 +21,8 @@ class InteractService
             # detect record
             if act_id =~ /\Aregular_/
                 # get record id from action_id
-                record_id = act_id.slice!('regular_').to_i
+                act_id.slice!('regular_')
+                record_id = act_id.to_i
                 
                 delete_weekly(record_id)
 
