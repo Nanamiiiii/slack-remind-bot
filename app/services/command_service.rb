@@ -157,7 +157,7 @@ class CommandService
                                 :emoji => true
                             },
                             :value => "click_me_123",
-                            :action_id => "delete_rec_#{id}"
+                            :action_id => "delete_rec_regular_#{id}"
                         },
                         {
                             :type => "button",
@@ -167,7 +167,7 @@ class CommandService
                                 :emoji => true
                             },
                             :value => "click_me_123",
-                            :action_id => "modify_rec_#{id}"
+                            :action_id => "modify_rec_regular_#{id}"
                         }
                     ]
                 }

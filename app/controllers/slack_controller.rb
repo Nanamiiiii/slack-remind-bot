@@ -5,24 +5,10 @@ class SlackController < ApplicationController
     # something
   end
 
-  # POST /recieve (not in use)
-  def create
-    @body = JSON.parse(request.body.read)
-    case @body['type']
-    when 'url_verification'
-      render json: @body
-    when 'event_callback'
-      # something
-    end
-    # json_hash  = params[:slack]
-    # Body::TestService.new(json_hash).execute
-  end
-
   # POST /commands
   def commands
     # slashコマンドの処理
-    # @body = JSON.parse(request.body.read)
-    # 投げられるのがうまくparseできないっぽいのでURIからデコード
+    # decode to [key, value] array
     req = URI.decode_www_form(request.body.read)
     # TODO: リクエスト認証
 
@@ -33,9 +19,13 @@ class SlackController < ApplicationController
   # POST /interact
   def interact
     # interaction element
-    req = URI.decode_www_form(request.body.read)
-    req2 = JSON.parse(req.assoc('payload').last)
-    logger.info(req2)
+    # TODO: request verification
+
+    # decode to [key, value] array
+    dec_json = URI.decode_www_form(request.body.read)
+    # parse key "payload"'s value
+    parsed_json = JSON.parse(req.assoc('payload').last, symbolize_names: true)
+    logger.info(parsed_json)
   end
 
   # Rake Task: reminder check
