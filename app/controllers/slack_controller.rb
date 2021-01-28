@@ -19,7 +19,7 @@ class SlackController < ApplicationController
     # slashコマンドの処理
     # @body = JSON.parse(request.body.read)
     # 投げられるのがうまくparseできないっぽいのでURIからデコード
-    req = URI.decode_www_form(request.body.read)
+    req = JSON.parse(request.body.read)
     # TODO: リクエスト認証
 
     command_service.execute(req)
