@@ -12,8 +12,8 @@ class SlackController < ApplicationController
     # slashコマンドの処理
     # verify
     request_body = request.body.read
-    timestamp = request.header['X-Slack-Request-Timestamp']
-    signature = request.header['X-Slack-Signature']
+    timestamp = request.headers['X-Slack-Request-Timestamp']
+    signature = request.headers['X-Slack-Signature']
     sig_base = "v0:#{timestamp}:#{request_body}"
     this_sig = OpenSSL::HMAC.hexdigest('sha256', SLACK_SIGNING_SECRET, sig_base)
     if !(signature.eql?("v0=#{this_sig}"))
