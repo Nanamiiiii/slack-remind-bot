@@ -86,7 +86,13 @@ class CommandService
             #TODO: set temporary reminder
         when 'show'
             # show remind schedule (now only regular sc)
-
+            # user certification
+            if !(certificate(user_id))
+                puts '# Setting regular reminder: Not certificated user'
+                err_ret(0, channel)
+                return
+            end
+            
             # check the number of reminder
             if @weekly_model.all.length == 0
                 block = [

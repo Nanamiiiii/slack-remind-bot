@@ -8,9 +8,14 @@ class SlackController < ApplicationController
   # POST /commands
   def commands
     # slashコマンドの処理
+    # verify
+    logger.info(request.body)
+    # SLACK_SIGNING_SECRET = ENV['SLACK_SIGNING_SECRET']
+    # timestamp = request.header['X-Slack-Request-Timestamp']
+    # signature = request.header['X-Slack-Signature']
+    # sig_base = "v0:#{timestamp}:"
     # decode to [key, value] array
     req = URI.decode_www_form(request.body.read)
-    # TODO: リクエスト認証
 
     command_service.execute(req)
 
