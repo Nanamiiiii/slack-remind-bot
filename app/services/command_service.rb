@@ -17,6 +17,7 @@ class CommandService
         user_id = @req.assoc('user_id').last
         user_name = @req.assoc('user_name').last
         channel = @req.assoc('channel_id').last
+        trg_id = @req.assoc('trigger_id').last
 
         case raw_text[0]
         when 'regist'
@@ -37,7 +38,7 @@ class CommandService
 
         when 'regular'
             # set regular reminder
-            # template: /command regular {day} {hour} {min} {offset} {place}
+            # template: /command regular
 
             # user certification
             if !(certificate(user_id))
@@ -45,42 +46,45 @@ class CommandService
                 err_ret(0, channel)
                 return
             end
-
-            # argument check: number, type
-            if raw_text.length != 6 || !(raw_text[1] =~ /^[0-9]+$/) || !(raw_text[2] =~ /^[0-9]+$/) || !(raw_text[3] =~ /^[0-9]+$/) || !(raw_text[4] =~ /^[0-9]+$/)
-                puts '# Setting regular reminder: Argument number or type error'
-                err_ret(1, channel)
-                return
-            end
-
-            wday = raw_text[1].to_i
-            hour = raw_text[2].to_i
-            min = raw_text[3].to_i
-            offset = raw_text[4].to_i
-            place = raw_text[5]
-
-            # argument check: range
-            if wday < 0 || wday > 6 || hour < 0 || hour > 23 || min < 0 || min > 59
-                puts '# Setting regular reminder: range error'
-                err_ret(1, channel)
-                return
-            end
-
-            remind_time = get_time_s(hour, min)
-            @weekly_model.create(day: wday, remind_time: remind_time, offset: offset, place: place)
             
-            wday_s = get_wday_string(wday)
-            msg = "定期リマインドを `#{wday_s} - #{remind_time}` の `#{offset}時間前` に設定しました．"
-            block = [
-                {
-                    :type => "section",
-                    :text => {
-                        :type => "mrkdwn",
-                        :text => msg
-                    }
-                }
-            ]
-            slack_client.send_block(channel, block)
+            views = gen_add_view
+            slack_client.send_view(trg_id, views)
+
+            # # argument check: number, type
+            # if raw_text.length != 6 || !(raw_text[1] =~ /^[0-9]+$/) || !(raw_text[2] =~ /^[0-9]+$/) || !(raw_text[3] =~ /^[0-9]+$/) || !(raw_text[4] =~ /^[0-9]+$/)
+            #     puts '# Setting regular reminder: Argument number or type error'
+            #     err_ret(1, channel)
+            #     return
+            # end
+
+            # wday = raw_text[1].to_i
+            # hour = raw_text[2].to_i
+            # min = raw_text[3].to_i
+            # offset = raw_text[4].to_i
+            # place = raw_text[5]
+
+            # # argument check: range
+            # if wday < 0 || wday > 6 || hour < 0 || hour > 23 || min < 0 || min > 59
+            #     puts '# Setting regular reminder: range error'
+            #     err_ret(1, channel)
+            #     return
+            # end
+
+            # remind_time = get_time_s(hour, min)
+            # @weekly_model.create(day: wday, remind_time: remind_time, offset: offset, place: place)
+            
+            # wday_s = get_wday_string(wday)
+            # msg = "定期リマインドを `#{wday_s} - #{remind_time}` の `#{offset}時間前` に設定しました．"
+            # block = [
+            #     {
+            #         :type => "section",
+            #         :text => {
+            #             :type => "mrkdwn",
+            #             :text => msg
+            #         }
+            #     }
+            # ]
+            # slack_client.send_block(channel, block)
 
         when 'temp'
             #TODO: set temporary reminder
@@ -92,7 +96,7 @@ class CommandService
                 err_ret(0, channel)
                 return
             end
-            
+
             # check the number of reminder
             if @weekly_model.all.length == 0
                 block = [
@@ -209,6 +213,162 @@ class CommandService
 
     end
 
+    def gen_add_view
+        # generate model view
+        views = {
+            :type => "modal",
+            :title => {
+                :type => "plain_text",
+                :text => "定期リマインド追加",
+                :emoji => true
+            },
+            :submit => {
+                :type => "plain_text",
+                :text => "Add",
+                :emoji => true
+            },
+            :close => {
+                :type => "plain_text",
+                :text => "Cancel",
+                :emoji => true
+            }
+        }
+
+        blocks = []
+        # generate wday selection
+        block = {
+            :type => "input",
+            :block_id => "wday_sel",
+            :element => {
+                :type => "static_select",
+                :placeholder => {
+                    :type => "plain_text",
+                    :text => "Select an item",
+                    :emoji => true
+                }
+            }
+        }
+        options = []
+        7.times do |i|
+            options << {
+                :text => {
+                    :type => "plain_text",
+                    :text => get_wday_jp(i),
+                    :emoji => true
+                },
+                :value => "#{i}"
+            }
+        end
+        block[:element].store(:options, options)
+        block[:element].store(:action_id, "week_day_select")
+        block.store(:label, { :type => "plain_text", :text => "曜日", :emoji => true })
+        blocks << block
+        
+        # generate hour selection
+        block = {
+			:type => "input",
+			:block_id => "hour_sel",
+			:element => {
+				:type => "static_select",
+				:placeholder => {
+					:type => "plain_text",
+					:text => "Select an item",
+					:emoji => true
+                }
+            }
+        }
+        options = []
+        24.times do |i|
+            options << {
+                :text => {
+                    :type => "plain_text",
+                    :text => "#{i}時",
+                    :emoji => true
+                },
+                :value => "#{i}"
+            }
+        end
+        block[:element].store(:options, options)
+        block[:element].store(:action_id, "hour_select")
+        block.store(:label, { :type => "plain_text", :text => "時", :emoji => true })
+        blocks << block
+
+        block = {
+            :type => "input",
+			:block_id => "min_sel",
+			:element => {
+				:type => "static_select",
+				:placeholder => {
+					:type => "plain_text",
+					:text => "Select an item",
+					:emoji => true
+                }
+            }      
+        }
+        options = []
+        6.times do |i|
+            options << {
+                :text => {
+                    :type => "plain_text",
+                    :text => "#{i*10}分",
+                    :emoji => true
+                },
+                :value => "#{i*10}"
+            }
+        end
+        block[:element].store(:options, options)
+        block[:element].store(:action_id, "minute_select")
+        block.store(:label, { :type => "plain_text", :text => "分", :emoji => true })
+        blocks << block
+
+        block = {
+            :type => "input",
+			:block_id => "place_in",
+			:element => {
+				:type => "plain_text_input",
+				:action_id => "place_input"
+			},
+			:label => {
+				:type => "plain_text",
+				:text => "場所",
+				:emoji => true
+			}
+        }
+        blocks << block
+        
+        block = {
+			:type => "input",
+			:block_id => "offset_sel",
+			:element => {
+				:type => "static_select",
+				:placeholder => {
+					:type => "plain_text",
+					:text => "Select an item",
+					:emoji => true
+                }
+            }
+        }
+        options = []
+        6.times do |i|
+            options << {
+                :text => {
+                    :type => "plain_text",
+                    :text => "#{i}時間前",
+                    :emoji => true
+                },
+                :value => "#{i}"
+            }
+        end
+
+        block[:element].store(:options, options)
+        block[:element].store(:action_id, "offset_select")
+        block.store(:label, { :type => "plain_text", :text => "通知", :emoji => true })
+        blocks << block
+
+        views.store(:blocks, blocks)
+        return views
+    end
+
     def get_wday_string(wday)
         case wday
         when 0
@@ -225,6 +385,27 @@ class CommandService
             wday_s = 'Fri'
         when 6
             wday_s = 'Sat'
+        end
+
+        return wday_s
+    end
+
+    def get_wday_jp(wday)
+        case wday
+        when 0
+            wday_s = '日曜日'
+        when 1
+            wday_s = '月曜日'
+        when 2
+            wday_s = '火曜日'
+        when 3
+            wday_s = '水曜日'
+        when 4
+            wday_s = '木曜日'
+        when 5
+            wday_s = '金曜日'
+        when 6
+            wday_s = '土曜日'
         end
 
         return wday_s
@@ -282,6 +463,6 @@ class CommandService
         end
     
         return "#{hour_s}:#{min_s}"
-      end
+    end
 
 end

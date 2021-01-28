@@ -9,7 +9,7 @@ class InteractService
         @weekly_model = weekly_model
     end
 
-    def execute(req)
+    def block_execute(req)
         # get params
         act = req[:actions].first
         act_id = act[:action_id]
@@ -30,6 +30,10 @@ class InteractService
                 slack_client.send_msg(channel, msg)
             end
         end
+    end
+
+    def modal_execute(req)
+        
     end
 
     def delete_weekly(record_id)

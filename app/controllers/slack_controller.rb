@@ -10,6 +10,7 @@ class SlackController < ApplicationController
   # POST /commands
   def commands
     # slashコマンドの処理
+
     # verify
     request_body = request.body.read
     timestamp = request.headers['X-Slack-Request-Timestamp']
@@ -17,25 +18,49 @@ class SlackController < ApplicationController
     sig_base = "v0:#{timestamp}:#{request_body}"
     this_sig = OpenSSL::HMAC.hexdigest('sha256', SLACK_SIGNING_SECRET, sig_base)
     if !(signature.eql?("v0=#{this_sig}"))
+      render :status => 404
       return
     end
 
+    # return status 200
+    render :status => 200
     # decode to [key, value] array
     req = URI.decode_www_form(request_body)
+    logger.info(req)
+    # execute command process
     command_service.execute(req)
   end
 
   # POST /interact
   def interact
     # interaction element
-    # TODO: request verification
+    # verify
+    request_body = request.body.read
+    timestamp = request.headers['X-Slack-Request-Timestamp']
+    signature = request.headers['X-Slack-Signature']
+    sig_base = "v0:#{timestamp}:#{request_body}"
+    this_sig = OpenSSL::HMAC.hexdigest('sha256', SLACK_SIGNING_SECRET, sig_base)
+    if !(signature.eql?("v0=#{this_sig}"))
+      render :status => 404
+      return
+    end
 
+    # render status 200
+    render :status => 200
     # decode to [key, value] array
-    dec_json = URI.decode_www_form(request.body.read)
+    dec_json = URI.decode_www_form(request_body)
     # parse key "payload"'s value
     parsed_json = JSON.parse(dec_json.assoc('payload').last, symbolize_names: true)
     logger.info(parsed_json)
-    interact_service.execute(parsed_json)
+    # execute interact process
+    # TODO: detect type
+    case parsed_json[:type]
+    when 'block_action'
+      interact_service.block_execute(parsed_json)
+    when 'view_submission'
+      interact_service.modal_execute(parsed_json)
+    end
+    
   end
 
   # Rake Task: reminder check

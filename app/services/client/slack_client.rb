@@ -27,6 +27,15 @@ module Client
       }
       @cli.post '/api/chat.postMessage', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
     end
+
+    def send_view(trg_id, view)
+      snd_data = {
+        :token => SLACK_BOT_USER_TOKEN,
+        :trigger_id => trg_id,
+        :view => view
+      }
+      @cli.post '/api/views.open', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+    end
     
   end
 end
