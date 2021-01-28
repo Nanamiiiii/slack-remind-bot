@@ -33,8 +33,9 @@ class SlackController < ApplicationController
   # POST /interact
   def interact
     # interaction element
-    req = JSON.parse(request.body.read)
-    logger.info(req)
+    req = URI.decode_www_form(request.body.read)
+    req2 = JSON.parse(req.assoc('payload').last)
+    logger.info(req2)
   end
 
   # Rake Task: reminder check
