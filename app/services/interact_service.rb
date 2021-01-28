@@ -40,11 +40,11 @@ class InteractService
             # get values
             channel = req[:user][:id]
             val = req[:view][:state][:values]
-            wday = val[:wday_sel][:week_day_select][:selected_option][:value]
-            hour = val[:hour_sel][:hour_select][:selected_option][:value]
-            min = val[:min_sel][:minute_select][:selected_option][:value]
+            wday = val[:wday_sel][:week_day_select][:selected_option][:value].to_i
+            hour = val[:hour_sel][:hour_select][:selected_option][:value].to_i
+            min = val[:min_sel][:minute_select][:selected_option][:value].to_i
             place = val[:place_in][:place_input][:value]
-            offset = val[:offset_sel][:offset_select][:selected_option][:value]
+            offset = val[:offset_sel][:offset_select][:selected_option][:value].to_i
 
             add_weekly(wday, hour, min, place, offset)
 
