@@ -26,6 +26,7 @@ class SlackController < ApplicationController
     # parse key "payload"'s value
     parsed_json = JSON.parse(dec_json.assoc('payload').last, symbolize_names: true)
     logger.info(parsed_json)
+    interact_service.execute(parsed_json)
   end
 
   # Rake Task: reminder check
@@ -48,6 +49,10 @@ class SlackController < ApplicationController
 
   def command_service
     CommandService.new
+  end
+
+  def interact_service
+    InteractService.new
   end
 
   def slack_client
