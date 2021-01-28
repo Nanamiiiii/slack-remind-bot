@@ -43,7 +43,7 @@ class InteractService
             wday = val[:wday_sel][:week_day_select][:selected_option][:value]
             hour = val[:hour_sel][:hour_select][:selected_option][:value]
             min = val[:min_sel][:minute_select][:selected_option][:value]
-            place = val[:place_in][:place_input][:selected_option][:value]
+            place = val[:place_in][:place_input][:value]
             offset = val[:offset_sel][:offset_select][:selected_option][:value]
 
             add_weekly(wday, hour, min, place, offset)
