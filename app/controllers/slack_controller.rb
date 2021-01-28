@@ -23,7 +23,7 @@ class SlackController < ApplicationController
     end
 
     # return status 200
-    render :status => 200
+    # render :status => 200
     # decode to [key, value] array
     req = URI.decode_www_form(request_body)
     logger.info(req)
@@ -46,7 +46,7 @@ class SlackController < ApplicationController
     end
 
     # render status 200
-    render :status => 200
+    # render :status => 200
     # decode to [key, value] array
     dec_json = URI.decode_www_form(request_body)
     # parse key "payload"'s value

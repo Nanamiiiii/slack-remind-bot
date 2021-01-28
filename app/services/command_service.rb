@@ -50,42 +50,6 @@ class CommandService
             views = gen_add_view
             slack_client.send_view(trg_id, views)
 
-            # # argument check: number, type
-            # if raw_text.length != 6 || !(raw_text[1] =~ /^[0-9]+$/) || !(raw_text[2] =~ /^[0-9]+$/) || !(raw_text[3] =~ /^[0-9]+$/) || !(raw_text[4] =~ /^[0-9]+$/)
-            #     puts '# Setting regular reminder: Argument number or type error'
-            #     err_ret(1, channel)
-            #     return
-            # end
-
-            # wday = raw_text[1].to_i
-            # hour = raw_text[2].to_i
-            # min = raw_text[3].to_i
-            # offset = raw_text[4].to_i
-            # place = raw_text[5]
-
-            # # argument check: range
-            # if wday < 0 || wday > 6 || hour < 0 || hour > 23 || min < 0 || min > 59
-            #     puts '# Setting regular reminder: range error'
-            #     err_ret(1, channel)
-            #     return
-            # end
-
-            # remind_time = get_time_s(hour, min)
-            # @weekly_model.create(day: wday, remind_time: remind_time, offset: offset, place: place)
-            
-            # wday_s = get_wday_string(wday)
-            # msg = "定期リマインドを `#{wday_s} - #{remind_time}` の `#{offset}時間前` に設定しました．"
-            # block = [
-            #     {
-            #         :type => "section",
-            #         :text => {
-            #             :type => "mrkdwn",
-            #             :text => msg
-            #         }
-            #     }
-            # ]
-            # slack_client.send_block(channel, block)
-
         when 'temp'
             #TODO: set temporary reminder
         when 'show'
@@ -113,80 +77,7 @@ class CommandService
                 return
             end
 
-            # generate block kit object
-            block = []
-            divider = {
-                :type => "divider"
-            }
-
-            @weekly_model.find_each do |model|
-                id = model.id
-                wday_s = get_wday_string(model.day)
-                time_h = model.remind_time.hour
-                time_m = model.remind_time.min
-                offset = model.offset
-                place = model.place
-
-                time_s = get_time_s(time_h, time_m)
-
-                section = {
-
-                    :type => "section",
-                    :fields => [
-                        {
-                            :type => "mrkdwn",
-                            :text => "*ID:*\n#{id}"
-                        },
-                        {
-                            :type => "mrkdwn",
-                            :text => "*曜日:*\n#{wday_s}"
-                        },
-                        {
-                            :type => "mrkdwn",
-                            :text => "*時刻:*\n#{time_s}"
-                        },
-                        {
-                            :type => "mrkdwn",
-                            :text => "*場所:*\n#{place}"
-                        },
-                        {
-                            :type => "mrkdwn",
-                            :text => "*送信:*\n#{offset}時間前"
-                        }
-                    ]
-                }
-
-                buttons = {
-                    :type => "actions",
-                    :elements => [
-                        {
-                            :type => "button",
-                            :text => {
-                                :type => "plain_text",
-                                :text => "削除",
-                                :emoji => true
-                            },
-                            :value => "click_me_123",
-                            :action_id => "delete_rec_regular_#{id}"
-                        },
-                        {
-                            :type => "button",
-                            :text => {
-                                :type => "plain_text",
-                                :text => "編集",
-                                :emoji => true
-                            },
-                            :value => "click_me_123",
-                            :action_id => "modify_rec_regular_#{id}"
-                        }
-                    ]
-                }
-                
-                block << section
-                block << buttons
-                block << divider
-            end
-
+            block = gen_remind_list
             slack_client.send_block(channel, block)
 
         else
@@ -217,6 +108,7 @@ class CommandService
         # generate model view
         views = {
             :type => "modal",
+            :callback_id => "add_weekly",
             :title => {
                 :type => "plain_text",
                 :text => "定期リマインド追加",
@@ -367,6 +259,83 @@ class CommandService
 
         views.store(:blocks, blocks)
         return views
+    end
+
+    def gen_remind_list
+        # generate block kit object
+        block = []
+        divider = {
+            :type => "divider"
+        }
+
+        @weekly_model.find_each do |model|
+            id = model.id
+            wday_s = get_wday_string(model.day)
+            time_h = model.remind_time.hour
+            time_m = model.remind_time.min
+            offset = model.offset
+            place = model.place
+
+            time_s = get_time_s(time_h, time_m)
+
+            section = {
+
+                :type => "section",
+                :fields => [
+                    {
+                        :type => "mrkdwn",
+                        :text => "*ID:*\n#{id}"
+                    },
+                    {
+                        :type => "mrkdwn",
+                        :text => "*曜日:*\n#{wday_s}"
+                    },
+                    {
+                        :type => "mrkdwn",
+                        :text => "*時刻:*\n#{time_s}"
+                    },
+                    {
+                        :type => "mrkdwn",
+                        :text => "*場所:*\n#{place}"
+                    },
+                    {
+                        :type => "mrkdwn",
+                        :text => "*送信:*\n#{offset}時間前"
+                    }
+                ]
+            }
+
+            buttons = {
+                :type => "actions",
+                :elements => [
+                    {
+                        :type => "button",
+                        :text => {
+                            :type => "plain_text",
+                            :text => "削除",
+                            :emoji => true
+                        },
+                        :value => "click_me_123",
+                        :action_id => "delete_rec_regular_#{id}"
+                    },
+                    {
+                        :type => "button",
+                        :text => {
+                            :type => "plain_text",
+                            :text => "編集",
+                            :emoji => true
+                        },
+                        :value => "click_me_123",
+                        :action_id => "modify_rec_regular_#{id}"
+                    }
+                ]
+            }
+            
+            block << section
+            block << buttons
+            block << divider
+        end
+        return block
     end
 
     def get_wday_string(wday)
