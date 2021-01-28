@@ -24,7 +24,7 @@ class SlackController < ApplicationController
     # decode to [key, value] array
     dec_json = URI.decode_www_form(request.body.read)
     # parse key "payload"'s value
-    parsed_json = JSON.parse(req.assoc('payload').last, symbolize_names: true)
+    parsed_json = JSON.parse(dec_json.assoc('payload').last, symbolize_names: true)
     logger.info(parsed_json)
   end
 
