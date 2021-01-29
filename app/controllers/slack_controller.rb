@@ -55,7 +55,7 @@ class SlackController < ApplicationController
     # execute interact process
     # TODO: detect type
     case parsed_json[:type]
-    when 'block_action'
+    when 'block_actions'
       interact_service.block_execute(parsed_json)
     when 'view_submission'
       interact_service.modal_execute(parsed_json)
