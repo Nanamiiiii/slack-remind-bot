@@ -31,7 +31,7 @@ class WeeklyService
       time_s = get_time_s(sc_h, sc_m)
 
       if day_of_week == remind_day && now_hour == rem_h
-        ret << "<!channel> 今日の活動は `#{time_s}` - `#{place}` です．"
+        ret << "<!channel> 今日の活動は `#{time_s}` から `#{place}` だよっ！"
       end
     end
 

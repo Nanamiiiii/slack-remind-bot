@@ -51,13 +51,13 @@ class CommandService
             views = gen_add_view
             slack_client.send_view(trg_id, views)
 
-        when 'temp'
-            #TODO: set temporary reminder
+        when 'verify'
+            # TODO: list uncertificated user
         when 'show'
             # show remind schedule (now only regular sc)
             # user certification
             if !(certificate(user_id))
-                puts '# Setting regular reminder: Not certificated user'
+                puts '[command_service] Setting regular reminder: Not certificated user'
                 err_ret(0, channel)
                 return
             end
@@ -82,253 +82,90 @@ class CommandService
             slack_client.send_block(user_id, block)
 
         else
-            # invalid argument (give information)
-            block = [
-                {
-                    :type => "section",
-                    :text => {
-                        :type => "plain_text",
-                        :text => "引数のフォーマットは以下のようになっています．",
-                        :emoji => true
-                    }
-                },
-                {
-                    :type => "section",
-                    :text => {
-                        :type => "mrkdwn",
-                        :text => "*regist* ユーザーの登録\n*regular* 定期リマインドの登録\n*show* 現在の設定の表示"
-                    }
-                }
-            ]
+            # user certification
+            if !(certificate(user_id))
+                puts '[command_service] Setting regular reminder: Not certificated user'
+                err_ret(0, channel)
+                return
+            end
+            # give modal view to select command
+            block = gen_command_view
             slack_client.send_block(user_id, block)
         end
 
     end
 
-    def gen_add_view
-        # generate model view
-        views = {
-            :type => "modal",
-            :callback_id => "add_weekly",
-            :title => {
-                :type => "plain_text",
-                :text => "定期リマインド追加",
-                :emoji => true
-            },
-            :submit => {
-                :type => "plain_text",
-                :text => "Add",
-                :emoji => true
-            },
-            :close => {
-                :type => "plain_text",
-                :text => "Cancel",
-                :emoji => true
-            }
-        }
-
-        blocks = []
-        # generate wday selection
-        block = {
-            :type => "input",
-            :block_id => "wday_sel",
-            :element => {
-                :type => "static_select",
-                :placeholder => {
-                    :type => "plain_text",
-                    :text => "Select an item",
-                    :emoji => true
-                }
-            }
-        }
-        options = []
-        7.times do |i|
-            options << {
-                :text => {
-                    :type => "plain_text",
-                    :text => get_wday_jp(i),
-                    :emoji => true
-                },
-                :value => "#{i}"
-            }
-        end
-        block[:element].store(:options, options)
-        block[:element].store(:action_id, "week_day_select")
-        block.store(:label, { :type => "plain_text", :text => "曜日", :emoji => true })
-        blocks << block
-        
-        # generate hour selection
-        block = {
-			:type => "input",
-			:block_id => "hour_sel",
-			:element => {
-				:type => "static_select",
-				:placeholder => {
-					:type => "plain_text",
-					:text => "Select an item",
-					:emoji => true
-                }
-            }
-        }
-        options = []
-        24.times do |i|
-            options << {
-                :text => {
-                    :type => "plain_text",
-                    :text => "#{i}時",
-                    :emoji => true
-                },
-                :value => "#{i}"
-            }
-        end
-        block[:element].store(:options, options)
-        block[:element].store(:action_id, "hour_select")
-        block.store(:label, { :type => "plain_text", :text => "時", :emoji => true })
-        blocks << block
-
-        block = {
-            :type => "input",
-			:block_id => "min_sel",
-			:element => {
-				:type => "static_select",
-				:placeholder => {
-					:type => "plain_text",
-					:text => "Select an item",
-					:emoji => true
-                }
-            }      
-        }
-        options = []
-        6.times do |i|
-            options << {
-                :text => {
-                    :type => "plain_text",
-                    :text => "#{i*10}分",
-                    :emoji => true
-                },
-                :value => "#{i*10}"
-            }
-        end
-        block[:element].store(:options, options)
-        block[:element].store(:action_id, "minute_select")
-        block.store(:label, { :type => "plain_text", :text => "分", :emoji => true })
-        blocks << block
-
-        block = {
-            :type => "input",
-			:block_id => "place_in",
-			:element => {
-				:type => "plain_text_input",
-				:action_id => "place_input"
-			},
-			:label => {
-				:type => "plain_text",
-				:text => "場所",
-				:emoji => true
-			}
-        }
-        blocks << block
-        
-        block = {
-			:type => "input",
-			:block_id => "offset_sel",
-			:element => {
-				:type => "static_select",
-				:placeholder => {
-					:type => "plain_text",
-					:text => "Select an item",
-					:emoji => true
-                }
-            }
-        }
-        options = []
-        6.times do |i|
-            options << {
-                :text => {
-                    :type => "plain_text",
-                    :text => "#{i}時間前",
-                    :emoji => true
-                },
-                :value => "#{i}"
-            }
-        end
-
-        block[:element].store(:options, options)
-        block[:element].store(:action_id, "offset_select")
-        block.store(:label, { :type => "plain_text", :text => "通知", :emoji => true })
-        blocks << block
-
-        views.store(:blocks, blocks)
-        return views
-    end
-
-    def gen_remind_list
-        # generate block kit object
-        block = []
-        divider = {
-            :type => "divider"
-        }
-
-        @weekly_model.find_each do |model|
-            id = model.id
-            wday_s = get_wday_string(model.day)
-            time_h = model.remind_time.hour
-            time_m = model.remind_time.min
-            offset = model.offset
-            place = model.place
-
-            time_s = get_time_s(time_h, time_m)
-
-            section = {
-
+    def gen_command_view
+        # generate modal view
+        blocks = [
+            {
                 :type => "section",
-                :fields => [
-                    {
-                        :type => "mrkdwn",
-                        :text => "*ID:*\n#{id}"
-                    },
-                    {
-                        :type => "mrkdwn",
-                        :text => "*曜日:*\n#{wday_s}"
-                    },
-                    {
-                        :type => "mrkdwn",
-                        :text => "*時刻:*\n#{time_s}"
-                    },
-                    {
-                        :type => "mrkdwn",
-                        :text => "*場所:*\n#{place}"
-                    },
-                    {
-                        :type => "mrkdwn",
-                        :text => "*送信:*\n#{offset}時間前"
-                    }
-                ]
-            }
-
-            buttons = {
+                :text => {
+                    :type => "plain_text",
+                    :text => "何をしますか？",
+                    :emoji => true
+                }
+            },
+            {
                 :type => "actions",
                 :elements => [
                     {
                         :type => "button",
                         :text => {
                             :type => "plain_text",
-                            :text => "削除",
+                            :text => "定期リマインド",
                             :emoji => true
                         },
                         :value => "click_me_123",
-                        :action_id => "delete_rec_regular_#{id}",
-                        :style => "danger"
+                        :action_id => "add_weekly"
+                    },
+                    {
+                        :type => "button",
+                        :text => {
+                            :type => "plain_text",
+                            :text => "設定確認",
+                            :emoji => true
+                        },
+                        :value => "click_me_123",
+                        :action_id => "show_weekly"
+                    },
+                    {
+                        :type => "button",
+                        :text => {
+                            :type => "plain_text",
+                            :text => "臨時リマインド",
+                            :emoji => true
+                        },
+                        :value => "click_me_123",
+                        :action_id => "add_temp"
+                    },
+                    {
+                        :type => "button",
+                        :text => {
+                            :type => "plain_text",
+                            :text => "キュー確認",
+                            :emoji => true
+                        },
+                        :value => "click_me_123",
+                        :action_id => "check_q"
+                    },
+                    {
+                        :type => "button",
+                        :text => {
+                            :type => "plain_text",
+                            :text => "投稿窓",
+                            :emoji => true
+                        },
+                        :value => "click_me_123",
+                        :action_id => "set_ch"
                     }
                 ]
             }
-            
-            block << section
-            block << buttons
-            block << divider
-        end
-        return block
+        ]
+        return blocks
     end
+
+    
 
     def get_wday_string(wday)
         case wday

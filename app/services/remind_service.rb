@@ -1,4 +1,5 @@
 require 'date'
+
 class RemindService
   def initialize(today = DateTime.now, weekly_service = WeeklyService.new)
     @today = today
