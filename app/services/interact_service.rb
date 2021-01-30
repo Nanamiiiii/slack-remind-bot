@@ -2,13 +2,15 @@ require 'date'
 require_relative '../models/user'
 require_relative '../models/weekly'
 require_relative '../models/channel'
+require_relative '../models/message'
 
 class InteractService
 
-    def initialize(user_model = User, weekly_model = Weekly, channel_model = Channel)
+    def initialize(user_model = User, weekly_model = Weekly, channel_model = Channel, message_model = Message)
         @user_model = user_model
         @weekly_model = weekly_model
         @channel_model = channel_model
+        @message_model = message_model
     end
 
     def block_execute(req)
@@ -26,7 +28,7 @@ class InteractService
         # get params
         act = req[:actions].first
         act_id = act[:action_id]
-        channel = req[:channel][:id]
+        channel = req[:user][:id]
 
         case act_id
         when /\Adelete_rec_/
@@ -70,7 +72,9 @@ class InteractService
     def show_weekly_reminders(req)
         user_id = req[:user][:id]
         block = gen_remind_list(@weekly_model.exists?)
-        slack_client.send_block(user_id, block)
+        ts = @message_model.find_by(userid: user_id).t_stamp
+        response = slack_client.update_message(user_id, ts, '', block)
+        set_last_timestamp(response[:ts], user_id)
     end
 
     def call_channel_set_modal(req)
@@ -115,7 +119,7 @@ class InteractService
         slack_client.send_msg(user_id, msg)
     end
 
-    def delete_weekly(act_id, channel)
+    def delete_weekly(act_id, user_id)
         # formatting act_id
         act_id.slice!('regular_')
         record_id = act_id.to_i
@@ -123,17 +127,32 @@ class InteractService
         if check_weekly_by_id(record_id)
             @weekly_model.destroy_by(id: record_id)
             gen_debug_log("Record Deletion: Succeeded! Deleted record id:#{record_id} from Weekly.")
+            
+            # update list
+            block = gen_remind_list(@weekly_model.exists?)
+            ts = @message_model.find_by(userid: user_id).t_stamp
+            response = slack_client.update_message(user_id, ts, '', block)
+            set_last_timestamp(response[:ts], user_id)
+
             msg = "定期設定を削除しました．"
-            slack_client.send_msg(channel, msg)
+            slack_client.send_msg(user_id, msg)
         else
             gen_debug_log("Record Deletion: Unsuccessful! Record id:#{record_id} does not exist.")
             msg = "レコードが存在しません．"
-            slack_client.send_msg(channel, msg)
+            slack_client.send_msg(user_id, msg)
         end
     end
 
     def check_weekly_by_id(record_id)
         return @weekly_model.exists?(id: record_id)
+    end
+
+    def set_last_timestamp(ts, user_id)
+        if (message = @message_model.find_by(userid: user_id)).present?
+            message.update(t_stamp: ts)
+        else
+            @message_model.create(userid: user_id, t_stamp: ts)
+        end
     end
 
     def get_time_s(hour, min)

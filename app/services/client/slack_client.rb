@@ -6,6 +6,7 @@ module Client
       @cli = Faraday::Connection.new(:url => 'https://slack.com') do |builder|
         builder.use Faraday::Request::UrlEncoded
         builder.use Faraday::Response::Logger
+        builder.response :json, :content_type => /\bjson$/
         builder.adapter Faraday::Adapter::NetHttp
       end
     end
@@ -16,7 +17,8 @@ module Client
         :channel => channel,
         :text => msg
       }
-      @cli.post '/api/chat.postMessage', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+      response = @cli.post '/api/chat.postMessage', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+      return response
     end
 
     def send_block(channel, block)
@@ -25,7 +27,8 @@ module Client
         :channel => channel,
         :blocks => block
       }
-      @cli.post '/api/chat.postMessage', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+      response = @cli.post '/api/chat.postMessage', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+      return response
     end
 
     def send_view(trg_id, view)
@@ -36,6 +39,25 @@ module Client
       }
       @cli.post '/api/views.open', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
     end
-    
-  end
+
+    def update_message(channel, ts, msg, block)
+      snd_data = {
+        :token => SLACK_BOT_USER_TOKEN,
+        :channel => channel,
+        :ts => ts,
+        :text => msg,
+        :blocks => block
+      }
+      response = @cli.post 'api/chat.update', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+      return response
+    end
+
+    def delete_message(channel, ts)
+      snd_data = {
+        :token => SLACK_BOT_USER_TOKEN,
+        :channel => channel,
+        :ts => ts
+      }
+      @cli.post 'api/chat.delete', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+    end
 end

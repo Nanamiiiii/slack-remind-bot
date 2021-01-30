@@ -1,12 +1,14 @@
 require 'date'
 require_relative '../models/user'
 require_relative '../models/weekly'
+require_relative '../models/message'
 
 class CommandService
 
-    def initialize(weekly_model = Weekly, user_model = User)
+    def initialize(weekly_model = Weekly, user_model = User, message_model = Message)
         @weekly_model = weekly_model
         @user_model = user_model
+        @message_model = message_model
     end
 
     def execute(req)
@@ -37,50 +39,8 @@ class CommandService
             # reply
             slack_client.send_msg(user_id, msg)
 
-        when 'regular'
-            # set regular reminder
-            # template: /command regular
-
-            # user certification
-            if !(certificate(user_id))
-                puts '# Setting regular reminder: Not certificated user'
-                err_ret(0, channel)
-                return
-            end
-            
-            views = gen_add_view
-            slack_client.send_view(trg_id, views)
-
         when 'verify'
             # TODO: list uncertificated user
-        when 'show'
-            # show remind schedule (now only regular sc)
-            # user certification
-            if !(certificate(user_id))
-                puts '[command_service] Setting regular reminder: Not certificated user'
-                err_ret(0, channel)
-                return
-            end
-
-            # check the number of reminder
-            if @weekly_model.all.length == 0
-                block = [
-                    {
-                        :type => "section",
-                        :text => {
-                            :type => "plain_text",
-                            :text => "リマインダーは設定されていません．",
-                            :emoji => true
-                        }
-                    }
-                ]
-                slack_client.send_block(channel, block)
-                return
-            end
-
-            block = gen_remind_list
-            slack_client.send_block(user_id, block)
-
         else
             # user certification
             if !(certificate(user_id))
@@ -90,9 +50,11 @@ class CommandService
             end
             # give modal view to select command
             block = gen_command_view
-            slack_client.send_block(user_id, block)
-        end
+            response = slack_client.send_block(user_id, block)
 
+            ts = response[:ts]
+            set_last_timestamp(ts, user_id)
+        end
     end
 
     def gen_command_view
@@ -165,7 +127,13 @@ class CommandService
         return blocks
     end
 
-    
+    def set_last_timestamp(ts, user_id)
+        if (message = @message_model.find_by(userid: user_id)).present?
+            message.update(t_stamp: ts)
+        else
+            @message_model.create(userid: user_id, t_stamp: ts)
+        end
+    end
 
     def get_wday_string(wday)
         case wday
