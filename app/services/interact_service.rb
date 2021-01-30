@@ -28,14 +28,15 @@ class InteractService
         # get params
         act = req[:actions].first
         act_id = act[:action_id]
-        channel = req[:user][:id]
+        user_id = req[:user][:id]
+        channel_id = req[:container][:channel_id]
 
         case act_id
         when /\Adelete_rec_/
             act_id.slice!('delete_rec_')
             case act_id
             when /\Aregular_/
-                delete_weekly(act_id, channel)
+                delete_weekly(act_id, user_id, channel_id)
             end
         when 'add_weekly'
             call_weekly_add_modal(req)
@@ -71,9 +72,10 @@ class InteractService
 
     def show_weekly_reminders(req)
         user_id = req[:user][:id]
+        channel_id = req[:container][:channel_id]
         block = gen_remind_list(@weekly_model.exists?)
         ts = @message_model.find_by(userid: user_id).t_stamp
-        response = slack_client.update_message(user_id, ts, '', block)
+        response = slack_client.update_message(channel_id, ts, '', block)
         set_last_timestamp(response["ts"], user_id)
     end
 
@@ -119,7 +121,7 @@ class InteractService
         slack_client.send_msg(user_id, msg)
     end
 
-    def delete_weekly(act_id, user_id)
+    def delete_weekly(act_id, user_id, channel_id)
         # formatting act_id
         act_id.slice!('regular_')
         record_id = act_id.to_i
@@ -131,7 +133,7 @@ class InteractService
             # update list
             block = gen_remind_list(@weekly_model.exists?)
             ts = @message_model.find_by(userid: user_id).t_stamp
-            response = slack_client.update_message(user_id, ts, '', block)
+            response = slack_client.update_message(channel_id, ts, '', block)
             set_last_timestamp(response["ts"], user_id)
 
             msg = "定期設定を削除しました．"
