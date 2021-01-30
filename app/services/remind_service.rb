@@ -1,25 +1,47 @@
 require 'date'
+require_relative '../models/reminder'
+require_relative '../models/channel'
 
 class RemindService
-  def initialize(today = DateTime.now, weekly_service = WeeklyService.new)
+  def initialize(today = DateTime.now, reminder_model = Reminder, channel_model = Channel)
     @today = today
-    @weekly_service = weekly_service
+    @reminder_model = reminder_model
+    @channel_model = channel_model
   end
 
   def check_reminders
-    reminders = []
-
-    weekly_reminder = check_weekly_reminder
-
-    weekly_reminder.each do |reminder|
-      reminders << reminder
+    @reminder_model.find_each do |reminder|
+      if datetime_equals(reminder)
+        exec_reminder(reminder)
+      end
     end
-
-    return reminders
   end
 
-  def check_weekly_reminder
-    return @weekly_service.reminder(@today)
+  def datetime_equals(reminder)
+    year = reminder.remind_day.year
+    month = reminder.remind_day.mon
+    day = reminder.remind_day.mday
+    hour = reminder.remind_day.hour
+    min = reminder.remind_day.min
+
+    if year == @today.year && month == @today.mon && day == @today.mday && hour == @today.hour
+      if @today.min - min >= 0 && @today.min - min < 10
+        return true
+      end
+    end
+
+    return false
+  end
+
+  def exec_reminder(reminder)
+    msg = reminder.comment
+    channel = @channel_model.find_by('reminder').ch_id
+
+    @slack_client.send_msg(channel, msg)
+  end
+
+  def slack_client
+    @slack_client ||= Client::SlackClient.new
   end
 
 end

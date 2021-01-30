@@ -483,17 +483,9 @@ class InteractService
             },
             :blocks => [
                 {
-                    :type => "section",
-                    :text => {
-                        :type => "plain_text",
-                        :text => "投稿するチャンネルを選択",
-                        :emoji => true
-                    }
-                },
-                {
-                    :type => "actions",
-                    :elements => [
-                        {
+                    :type => "input",
+                    :block_id => "ch_sel",
+                    :element => {
                             :type => "channels_select",
                             :placeholder => {
                                 :type => "plain_text",
@@ -501,8 +493,12 @@ class InteractService
                                 :emoji => true
                             },
                             :action_id => "ch_select"
-                        }
-                    ]
+                    },
+                    :label => {
+                        :type => "plain_text",
+                        :text => "投稿チャンネル",
+                        :emoji => true
+                    }
                 }
             ]
         }
@@ -514,6 +510,6 @@ class InteractService
     end
 
     def gen_debug_log(str)
-        puts "[interact_service] #{str}"
+        puts "[interact_service]: #{str}"
     end
 end

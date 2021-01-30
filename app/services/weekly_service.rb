@@ -7,7 +7,7 @@ class WeeklyService
   end
 
   def reminder(today)
-    puts today
+    gen_debug_log(today)
     day_of_week = today.wday
     now_hour = today.hour
     now_minute = today.min
@@ -54,6 +54,10 @@ class WeeklyService
     end
 
     return "#{hour_s}:#{min_s}"
+  end
+
+  def gen_debug_log(str)
+    puts "[weekly service]: #{str}"
   end
 
 end

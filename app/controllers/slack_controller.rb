@@ -65,11 +65,12 @@ class SlackController < ApplicationController
 
   # Rake Task: reminder check
   def reminder
+    @channel = Message.find_by(index: 'reminder')
     reminders = get_reminders
     logger.info(reminders)
     
     reminders.each do |reminder|
-      slack_client.send_msg('schedule', reminder)
+      slack_client.send_msg(@channel.ch_id, reminder)
     end
   end
 

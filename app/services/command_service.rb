@@ -37,7 +37,14 @@ class CommandService
             end
 
             # reply
-            slack_client.send_msg(user_id, msg)
+            if (message = @message_model.find_by(userid: user_id)).present?
+                response = slack_client.update_message_only(channel, message.t_stamp, msg)
+            else
+                response = slack_client.send_msg(user_id, msg)
+            end
+
+            ts = response["ts"]
+            set_last_timestamp(ts, user_id)
 
         when 'verify'
             # TODO: list uncertificated user
@@ -48,10 +55,17 @@ class CommandService
                 err_ret(0, channel)
                 return
             end
+
             # give modal view to select command
             block = gen_command_view
-            response = slack_client.send_block(user_id, block)
 
+            if (message = @message_model.find_by(userid: user_id)).present?
+                response = slack_client.update_message(channel, message.t_stamp, '', block)
+            else
+                response = slack_client.send_block(user_id, block)
+            end
+
+            # get and store timestamp
             ts = response["ts"]
             set_last_timestamp(ts, user_id)
         end
