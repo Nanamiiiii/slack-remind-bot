@@ -52,7 +52,7 @@ class CommandService
             block = gen_command_view
             response = slack_client.send_block(user_id, block)
 
-            ts = response[:ts]
+            ts = response["ts"]
             set_last_timestamp(ts, user_id)
         end
     end
