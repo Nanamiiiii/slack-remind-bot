@@ -193,6 +193,27 @@ class InteractService
         return wday_s
     end
 
+    def get_wday_jp(wday)
+        case wday
+        when 0
+            wday_s = '日曜日'
+        when 1
+            wday_s = '月曜日'
+        when 2
+            wday_s = '火曜日'
+        when 3
+            wday_s = '水曜日'
+        when 4
+            wday_s = '木曜日'
+        when 5
+            wday_s = '金曜日'
+        when 6
+            wday_s = '土曜日'
+        end
+
+        return wday_s
+    end
+
     def gen_add_view
         # generate model view
         views = {

@@ -18,6 +18,7 @@ module Client
         :text => msg
       }
       response = @cli.post '/api/chat.postMessage', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+      puts response
       return response
     end
 
@@ -28,6 +29,7 @@ module Client
         :blocks => block
       }
       response = @cli.post '/api/chat.postMessage', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+      puts response
       return response
     end
 
@@ -49,6 +51,7 @@ module Client
         :blocks => block
       }
       response = @cli.post 'api/chat.update', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+      puts response
       return response
     end
 

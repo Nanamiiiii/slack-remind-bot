@@ -135,47 +135,7 @@ class CommandService
         end
     end
 
-    def get_wday_string(wday)
-        case wday
-        when 0
-            wday_s = 'Sun'
-        when 1
-            wday_s = 'Mon'
-        when 2
-            wday_s = 'Tue'
-        when 3
-            wday_s = 'Wed'
-        when 4
-            wday_s = 'Thu'
-        when 5
-            wday_s = 'Fri'
-        when 6
-            wday_s = 'Sat'
-        end
-
-        return wday_s
-    end
-
-    def get_wday_jp(wday)
-        case wday
-        when 0
-            wday_s = '日曜日'
-        when 1
-            wday_s = '月曜日'
-        when 2
-            wday_s = '火曜日'
-        when 3
-            wday_s = '水曜日'
-        when 4
-            wday_s = '木曜日'
-        when 5
-            wday_s = '金曜日'
-        when 6
-            wday_s = '土曜日'
-        end
-
-        return wday_s
-    end
+    
 
     def certificate(user_id)
         # user certification
