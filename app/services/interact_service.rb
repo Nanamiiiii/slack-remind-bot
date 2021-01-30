@@ -65,6 +65,13 @@ class InteractService
     end
 
     def call_weekly_add_modal(req)
+        # delete command message
+        user_id = req[:user][:id]
+        channel_id = req[:container][:channel_id]
+        ts = @message_model.find_by(userid: user_id).t_stamp
+        slack_client.delete_message(channel_id, ts)
+
+        # generate view
         trg_id = req[:trigger_id]
         views = gen_add_view
         slack_client.send_view(trg_id, views)
