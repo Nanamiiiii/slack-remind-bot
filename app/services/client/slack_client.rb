@@ -18,8 +18,8 @@ module Client
         :text => msg
       }
       response = @cli.post '/api/chat.postMessage', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
-      puts response
-      return response
+      puts response.body
+      return response.body
     end
 
     def send_block(channel, block)
@@ -29,8 +29,8 @@ module Client
         :blocks => block
       }
       response = @cli.post '/api/chat.postMessage', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
-      puts response
-      return response
+      puts response.body
+      return response.body
     end
 
     def send_view(trg_id, view)
@@ -51,8 +51,8 @@ module Client
         :blocks => block
       }
       response = @cli.post 'api/chat.update', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
-      puts response
-      return response
+      puts response.body
+      return response.body
     end
 
     def delete_message(channel, ts)
