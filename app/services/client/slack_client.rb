@@ -60,4 +60,5 @@ module Client
       }
       @cli.post 'api/chat.delete', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
     end
+  end
 end
