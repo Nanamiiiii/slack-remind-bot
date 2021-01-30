@@ -74,7 +74,7 @@ class InteractService
         block = gen_remind_list(@weekly_model.exists?)
         ts = @message_model.find_by(userid: user_id).t_stamp
         response = slack_client.update_message(user_id, ts, '', block)
-        set_last_timestamp(response[:ts], user_id)
+        set_last_timestamp(response["ts"], user_id)
     end
 
     def call_channel_set_modal(req)
@@ -132,7 +132,7 @@ class InteractService
             block = gen_remind_list(@weekly_model.exists?)
             ts = @message_model.find_by(userid: user_id).t_stamp
             response = slack_client.update_message(user_id, ts, '', block)
-            set_last_timestamp(response[:ts], user_id)
+            set_last_timestamp(response["ts"], user_id)
 
             msg = "定期設定を削除しました．"
             slack_client.send_msg(user_id, msg)
