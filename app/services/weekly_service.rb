@@ -1,18 +1,24 @@
 require 'date'
 require_relative '../models/weekly'
+require_relative '../models/reminder'
 
 class WeeklyService
-  def initialize(weekly_model = Weekly)
+  def initialize(weekly_model = Weekly, reminder_model = Reminder)
+    @reminder_model = reminder_model
     @weekly_model = weekly_model
   end
 
   def reminder(today)
     gen_debug_log(today)
     day_of_week = today.wday
-    now_hour = today.hour
-    now_minute = today.min
+    year = today.year
+    month = today.mon
+    mday = today.mday
 
-    ret = []
+    
+    if day_of_week != 0
+      return
+    end
 
     @weekly_model.find_each do |model|
       
@@ -25,18 +31,23 @@ class WeeklyService
       rem_h = sc_h - offset
       if rem_h < 0
         rem_h += 24
-        day_of_week -= 1
+        remind_day -= 1
+        if remind_day < 0
+            remind_day += 7
+        end
       end
-
+      
+      set_date = today + remind_day
+      set_date.change(hour: rem_h, min: sc_m, sec: 0)  
       time_s = get_time_s(sc_h, sc_m)
+      comment = "<!channel> 今日の活動は `#{time_s}` から `#{place}` だよっ！"
+      set_reminder_record(set_date.to_s(:db), comment)
 
-      if day_of_week == remind_day && now_hour == rem_h
-        ret << "<!channel> 今日の活動は `#{time_s}` から `#{place}` だよっ！"
-      end
-    end
-
-    return ret
-    
+    end    
+  end
+  
+  def set_reminder_record(remind_day, comment)
+    @reminder_model.create(remind_day: remind_day, comment: comment) 
   end
 
   def get_time_s(hour, min)

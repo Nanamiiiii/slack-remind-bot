@@ -23,7 +23,7 @@ class RemindService
     day = reminder.remind_day.mday
     hour = reminder.remind_day.hour
     min = reminder.remind_day.min
-
+    
     if year == @today.year && month == @today.mon && day == @today.mday && hour == @today.hour
       if @today.min - min >= 0 && @today.min - min < 10
         return true
