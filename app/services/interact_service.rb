@@ -3,14 +3,16 @@ require_relative '../models/user'
 require_relative '../models/weekly'
 require_relative '../models/channel'
 require_relative '../models/message'
+require_relative '../models/reminder'
 
 class InteractService
 
-    def initialize(user_model = User, weekly_model = Weekly, channel_model = Channel, message_model = Message)
+    def initialize(user_model = User, weekly_model = Weekly, channel_model = Channel, message_model = Message, reminder_model = Reminder)
         @user_model = user_model
         @weekly_model = weekly_model
         @channel_model = channel_model
         @message_model = message_model
+        @reminder_model = reminder_model
     end
 
     def block_execute(req)
@@ -45,7 +47,7 @@ class InteractService
         when 'add_temp'
             # TODO: implement temporary reminder
         when 'check_q'
-            # TODO: implement list up and add comment method.
+            show_reminder_db(req)
         when 'add_comment'
             # TODO: implement comment adding method
         when 'set_ch'
@@ -64,6 +66,8 @@ class InteractService
         end
     end
 
+    private
+
     def call_weekly_add_modal(req)
         # delete command message
         user_id = req[:user][:id]
@@ -80,7 +84,16 @@ class InteractService
     def show_weekly_reminders(req)
         user_id = req[:user][:id]
         channel_id = req[:container][:channel_id]
-        block = gen_remind_list(@weekly_model.exists?)
+        block = gen_weekly_remind_list(@weekly_model.exists?)
+        ts = @message_model.find_by(userid: user_id).t_stamp
+        response = slack_client.update_message(channel_id, ts, '', block)
+        set_last_timestamp(response["ts"], user_id)
+    end
+
+    def show_reminder_db(req)
+        user_id = req[:user][:id]
+        channel_id = req[:container][:channel_id]
+        block = gen_reminder_db_list(@reminder_model.exists?)
         ts = @message_model.find_by(userid: user_id).t_stamp
         response = slack_client.update_message(channel_id, ts, '', block)
         set_last_timestamp(response["ts"], user_id)
@@ -111,6 +124,25 @@ class InteractService
         time_s = get_time_s(hour, min)
         msg = "定期リマインドを `#{wday_s} - #{time_s}` の `#{offset}時間前` に設定しました．"
         slack_client.send_msg(channel, msg)
+
+        # set reminder cannot be set automatically
+        today = DateTime.now
+        hour = hour - offset
+        if hour < 0
+            hour += 24
+            wday -= 1
+            if wday < 0
+                wday += 7
+            end
+        end
+
+        if wday > today.wday
+            set_date = today + (wday - today.wday)
+            set_date.change(hour: hour, min: min, sec: 0)
+            time_s = get_time_s(hour, min)
+            comment = "<!channel> 今日の活動は `#{time_s}` から `#{place}` だよっ！"
+            @reminder_model.create(remind_day: set_date.to_s(:db), comment: comment)
+        end
     end
 
     def set_channel(req)
@@ -380,7 +412,7 @@ class InteractService
         return views
     end
 
-    def gen_remind_list(model_presence)
+    def gen_weekly_remind_list(model_presence)
         # generate block kit object
         if model_presence
             block = []
@@ -437,6 +469,78 @@ class InteractService
                             },
                             :value => "click_me_123",
                             :action_id => "delete_rec_regular_#{id}",
+                            :style => "danger"
+                        }
+                    ]
+                }
+            
+                block << section
+                block << buttons
+                block << divider
+            end
+        else
+            block = [
+                {
+                    :type => "section",
+                    :text => {
+                        :type => "plain_text",
+                        :text => "リマインダーは設定されていません．",
+                        :emoji => true
+                    }
+                }
+            ]
+        end
+
+        return block
+    end
+
+    def gen_reminder_db_list(model_presence)
+        # generate block kit object
+        if model_presence
+            block = []
+            divider = {
+                :type => "divider"
+            }
+
+            @reminder_model.find_each do |model|
+                id = model.id
+                rem_date = model.remind_day
+                rem_date_s = rem_date.strftime("%Y/%m/%d %a %H:%M:%S")
+                comment = model.comment
+
+                time_s = get_time_s(time_h, time_m)
+
+                section = {
+
+                    :type => "section",
+                    :fields => [
+                        {
+                            :type => "mrkdwn",
+                            :text => "*ID:*\n#{id}"
+                        },
+                        {
+                            :type => "mrkdwn",
+                            :text => "*日時:*\n#{rem_date_s}"
+                        },
+                        {
+                            :type => "mrkdwn",
+                            :text => "*コメント:*\n#{comment}"
+                        }
+                    ]
+                }
+
+                buttons = {
+                    :type => "actions",
+                    :elements => [
+                        {
+                            :type => "button",
+                            :text => {
+                                :type => "plain_text",
+                                :text => "削除",
+                                :emoji => true
+                            },
+                            :value => "click_me_123",
+                            :action_id => "delete_rec_q_#{id}",
                             :style => "danger"
                         }
                     ]

@@ -45,6 +45,8 @@ class WeeklyService
 
     end    
   end
+
+  private
   
   def set_reminder_record(remind_day, comment)
     @reminder_model.create(remind_day: remind_day, comment: comment) 
