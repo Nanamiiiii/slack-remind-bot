@@ -17,6 +17,8 @@ module Client
                 req.params[:slack_id] = user_id
             end
 
+            puts response
+
             return response.body["role"]
         end
     end
