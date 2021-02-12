@@ -123,7 +123,7 @@ class CommandService
     def certificate(user_id)
         # user certification
         user_role = portal_client.check_user_role(user_id)
-        if user_role = 'admin'
+        if user_role == 'admin'
             return true
         else
             return false
