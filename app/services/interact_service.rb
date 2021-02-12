@@ -108,7 +108,7 @@ class InteractService
     def add_weekly(req)
         # get values
         user_id = req[:user][:id]
-        channel_id = req[:container][:channel_id]
+        # channel_id = req[:container][:channel_id]
         val = req[:view][:state][:values]
         wday = val[:wday_sel][:week_day_select][:selected_option][:value].to_i
         hour = val[:hour_sel][:hour_select][:selected_option][:value].to_i
