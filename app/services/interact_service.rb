@@ -508,8 +508,6 @@ class InteractService
                 rem_date_s = rem_date.strftime("%Y/%m/%d %a %H:%M:%S")
                 comment = model.comment
 
-                time_s = get_time_s(time_h, time_m)
-
                 section = {
 
                     :type => "section",
