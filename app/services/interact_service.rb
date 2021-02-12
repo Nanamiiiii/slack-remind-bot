@@ -107,7 +107,8 @@ class InteractService
 
     def add_weekly(req)
         # get values
-        channel = req[:user][:id]
+        user_id = req[:user][:id]
+        channel_id = req[:container][:channel_id]
         val = req[:view][:state][:values]
         wday = val[:wday_sel][:week_day_select][:selected_option][:value].to_i
         hour = val[:hour_sel][:hour_select][:selected_option][:value].to_i
@@ -123,7 +124,8 @@ class InteractService
         wday_s = get_wday_string(wday)
         time_s = get_time_s(hour, min)
         msg = "定期リマインドを `#{wday_s} - #{time_s}` の `#{offset}時間前` に設定しました．"
-        slack_client.send_msg(channel, msg)
+        response = slack_client.send_msg(user_id, msg)
+        set_last_timestamp(response["ts"], user_id)
 
         # set reminder cannot be set automatically
         today = DateTime.now
