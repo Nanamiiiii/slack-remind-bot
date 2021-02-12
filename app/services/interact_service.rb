@@ -127,9 +127,9 @@ class InteractService
 
         # set reminder cannot be set automatically
         today = DateTime.now
-        hour = hour - offset
-        if hour < 0
-            hour += 24
+        r_hour = hour - offset
+        if r_hour < 0
+            r_hour += 24
             wday -= 1
             if wday < 0
                 wday += 7
@@ -137,8 +137,8 @@ class InteractService
         end
 
         if wday > today.wday
-            set_date = today + (wday - today.wday)
-            set_date.change(hour: hour, min: min, sec: 0)
+            tmp_day = today + (wday - today.wday)
+            set_date = DateTime.new(tmp_day.year, tmp_day.month, tmp_day.day, r_hour, min, 0)
             time_s = get_time_s(hour, min)
             comment = "<!channel> 今日の活動は `#{time_s}` から `#{place}` だよっ！"
             @reminder_model.create(remind_day: set_date.to_s(:db), comment: comment)
