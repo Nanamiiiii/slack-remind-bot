@@ -55,6 +55,19 @@ module Client
       return response.body
     end
 
+    def update_message_only(channel, ts, msg)
+      snd_data = {
+        :token => SLACK_BOT_USER_TOKEN,
+        :channel => channel,
+        :ts => ts,
+        :text => msg
+      }
+      response = @cli.post 'api/chat.update', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+      puts response.body
+      return response.body
+    end
+
+
     def delete_message(channel, ts)
       snd_data = {
         :token => SLACK_BOT_USER_TOKEN,

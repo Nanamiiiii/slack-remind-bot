@@ -63,20 +63,6 @@ class SlackController < ApplicationController
     
   end
 
-  # Rake Task: reminder check
-  def reminder
-    reminders = get_reminders
-    logger.info(reminders)
-    
-    reminders.each do |reminder|
-      slack_client.send_msg('schedule', reminder)
-    end
-  end
-
-  def get_reminders
-    remind_service.check_reminders
-  end
-
   def remind_service
     RemindService.new
   end
