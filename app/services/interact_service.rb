@@ -283,7 +283,7 @@ class InteractService
     def get_wday_jp(wday)
         case wday
         when 0
-            wday_s = '日曜日'model delete
+            wday_s = '日曜日'
         when 2
             wday_s = '火曜日'
         when 3
