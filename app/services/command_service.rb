@@ -1,13 +1,13 @@
 require 'date'
-require_relative '../models/user'
 require_relative '../models/weekly'
 require_relative '../models/message'
 
 class CommandService
 
-    def initialize(weekly_model = Weekly, user_model = User, message_model = Message)
+    VERIFY_WITH_PORTAL = ENV['VERIFY_WITH_PORTAL']
+
+    def initialize(weekly_model = Weekly, message_model = Message)
         @weekly_model = weekly_model
-        @user_model = user_model
         @message_model = message_model
     end
 
@@ -22,17 +22,21 @@ class CommandService
         trg_id = @req.assoc('trigger_id').last
 
         # user certification
-        if !(certificate(user_id))
-            puts '[command_service] Setting regular reminder: Not certificated user'
-            err_ret(0, channel)
+        if !(user_verification(user_id))
+            gen_debug_log("Setting regular reminder: Not certificated user")
+            err_ret(0, user_id)
             return
         end
 
         # give modal view to select command
         block = gen_command_view
-
+        # if valid timestamp exists, update message
         if (message = @message_model.find_by(userid: user_id)).present?
-            response = slack_client.update_message(channel, message.t_stamp, '', block)
+            if !(message.t_stamp.nil?)
+                response = slack_client.update_message(channel, message.t_stamp, '', block)
+            else
+                response = slack_client.send_block(user_id, block)
+            end
         else
             response = slack_client.send_block(user_id, block)
         end
@@ -41,6 +45,8 @@ class CommandService
         ts = response["ts"]
         set_last_timestamp(ts, user_id)
     end
+
+    private
 
     def gen_command_view
         # generate modal view
@@ -60,7 +66,7 @@ class CommandService
                         :type => "button",
                         :text => {
                             :type => "plain_text",
-                            :text => "定期リマインド",
+                            :text => "定期通知追加",
                             :emoji => true
                         },
                         :value => "click_me_123",
@@ -70,21 +76,21 @@ class CommandService
                         :type => "button",
                         :text => {
                             :type => "plain_text",
-                            :text => "設定確認",
+                            :text => "臨時通知追加",
                             :emoji => true
                         },
                         :value => "click_me_123",
-                        :action_id => "show_weekly"
+                        :action_id => "add_temp"
                     },
                     {
                         :type => "button",
                         :text => {
                             :type => "plain_text",
-                            :text => "臨時リマインド",
+                            :text => "定期設定確認",
                             :emoji => true
                         },
                         :value => "click_me_123",
-                        :action_id => "add_temp"
+                        :action_id => "show_weekly"
                     },
                     {
                         :type => "button",
@@ -100,11 +106,22 @@ class CommandService
                         :type => "button",
                         :text => {
                             :type => "plain_text",
-                            :text => "投稿窓",
+                            :text => "投稿窓設定",
                             :emoji => true
                         },
                         :value => "click_me_123",
                         :action_id => "set_ch"
+                    },
+                    {
+                        :type => "button",
+                        :text => {
+                            :type => "plain_text",
+                            :text => "キャンセル",
+                            :emoji => true
+                        },
+                        :value => "click_me_123",
+                        :action_id => "cancel_command",
+                        :style => "danger"
                     }
                 ]
             }
@@ -120,12 +137,12 @@ class CommandService
         end
     end
 
-    def certificate(user_id)
-        # user certification
-        # for debug
-        debug_id = 'UJ60B9D51'
-        # user_role = portal_client.check_user_role(user_id)
-        user_role = portal_client.check_user_role(debug_id)
+    def user_verification(user_id)
+        if !(VERIFY_WITH_PORTAL)
+            return true
+        end
+        # user verification
+        user_role = portal_client.check_user_role(user_id)
         if user_role == 'admin'
             return true
         else
@@ -155,18 +172,22 @@ class CommandService
     def get_time_s(hour, min)
         # generate time string
         if hour/10 == 0
-          hour_s = "0#{hour}"
+            hour_s = "0#{hour}"
         else
-          hour_s = "#{hour}"
+            hour_s = "#{hour}"
         end
     
         if min/10 == 0
-          min_s = "0#{min}"
+            min_s = "0#{min}"
         else
-          min_s = "#{min}"
+            min_s = "#{min}"
         end
     
         return "#{hour_s}:#{min_s}"
+    end
+
+    def gen_debug_log(str)
+        puts "[command service]: #{str}"
     end
 
 end
