@@ -4,7 +4,7 @@ require_relative '../models/message'
 
 class CommandService
 
-    VERIFY_WITH_PORTAL = ENV['VERIFY_WITH_PORTAL']
+    VERIFY_WITH = ENV['VERIFY_WITH']
 
     def initialize(weekly_model = Weekly, message_model = Message)
         @weekly_model = weekly_model
@@ -138,15 +138,16 @@ class CommandService
     end
 
     def user_verification(user_id)
-        if VERIFY_WITH_PORTAL == 0
-            return true
-        end
-        # user verification
-        user_role = portal_client.check_user_role(user_id)
-        if user_role == 'admin'
-            return true
+        if VERIFY_WITH == 'portal'
+            # user verification
+            user_role = portal_client.check_user_role(user_id)
+            if user_role == 'admin'
+                return true
+            else
+                return false
+            end
         else
-            return false
+            return true
         end
     end
 

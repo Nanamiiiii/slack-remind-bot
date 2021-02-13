@@ -32,8 +32,8 @@ https://api.slack.com/apps
 * `SLACK_BOT_USER_TOKEN` - Bot User OAuth Access Token
 * `SLACK_SIGNING_SECRET` - Signing Secret
 * `PORTAL_AUTH_TOKEN` - Portal apiの認証用トークン
-* `VERIFY_WITH_PORTAL` - Portalを使ったユーザー認証をするか（テスト環境では0に，公式Slackから受ける場合は1に）
-* `DATABASE_URL`  
+* `VERIFY_WITH` - Portalを使ったユーザー認証をするか（使用する場合は`portal`にする）
+* `DATABASE_URL`
 * Herokuで動かす際はClearDBを導入して，`DB_HOSTNAME` `DB_NAME` `DB_USERNAME` `DB_PASSWORD` `DB_PORT` も設定した
 
 ### Rake Task
