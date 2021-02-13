@@ -103,7 +103,7 @@ class InteractService
 
         # generate view
         trg_id = req[:trigger_id]
-        views = gen_tempolary_add_view
+        views = gen_temporary_add_view
         slack_client.send_view(trg_id, views)
     end
 
@@ -456,7 +456,7 @@ class InteractService
         return views
     end
 
-    def gen_tempolary_add_view
+    def gen_temporary_add_view
         # generate modal view
         views = {
             :type => "modal",

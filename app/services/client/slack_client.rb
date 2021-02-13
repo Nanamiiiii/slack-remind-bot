@@ -40,7 +40,8 @@ module Client
                 :trigger_id => trg_id,
                 :view => view
             }
-            @cli.post '/api/views.open', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+            response = @cli.post '/api/views.open', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
+            puts response.body
         end
 
         def update_message(channel, ts, msg, block)
