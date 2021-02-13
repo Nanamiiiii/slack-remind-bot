@@ -138,7 +138,7 @@ class CommandService
     end
 
     def user_verification(user_id)
-        if !(VERIFY_WITH_PORTAL)
+        if VERIFY_WITH_PORTAL == 0
             return true
         end
         # user verification
