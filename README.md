@@ -25,6 +25,7 @@ https://api.slack.com/apps
 * Bot User OAuth Access Token (xoxb-...) を控える．
 * Slash Command作成 Request URLは `https://<--server url-->/commands`
 * InteractivityをOnにし，Request URLは `https://<--server url-->/interact`
+* Beta featuresを使っているので有効化
 * 最後にWorkspaceにインストールする
 
 ### 環境変数
