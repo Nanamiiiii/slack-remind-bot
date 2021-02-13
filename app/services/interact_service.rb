@@ -1,5 +1,4 @@
 require 'date'
-require_relative '../models/user'
 require_relative '../models/weekly'
 require_relative '../models/channel'
 require_relative '../models/message'
@@ -7,8 +6,7 @@ require_relative '../models/reminder'
 
 class InteractService
 
-    def initialize(user_model = User, weekly_model = Weekly, channel_model = Channel, message_model = Message, reminder_model = Reminder)
-        @user_model = user_model
+    def initialize(weekly_model = Weekly, channel_model = Channel, message_model = Message, reminder_model = Reminder)
         @weekly_model = weekly_model
         @channel_model = channel_model
         @message_model = message_model
@@ -45,13 +43,15 @@ class InteractService
         when 'show_weekly'
             show_weekly_reminders(req)
         when 'add_temp'
-            # TODO: implement temporary reminder
+            call_reminder_add_modal(req)
         when 'check_q'
             show_reminder_db(req)
         when 'add_comment'
             # TODO: implement comment adding method
         when 'set_ch'
             call_channel_set_modal(req)
+        when 'cancel_command'
+            delete_recent_message(req)
         end
     end
 
@@ -61,6 +61,8 @@ class InteractService
         case callback_id
         when 'add_weekly'
             add_weekly(req)
+        when 'add_rem'
+            add_reminder(req)
         when 'ch_select'
             set_channel(req)
         end
@@ -74,6 +76,7 @@ class InteractService
         channel_id = req[:container][:channel_id]
         ts = @message_model.find_by(userid: user_id).t_stamp
         slack_client.delete_message(channel_id, ts)
+        @message_model.find_by(userid: user_id).delete
 
         # generate view
         trg_id = req[:trigger_id]
@@ -88,6 +91,20 @@ class InteractService
         ts = @message_model.find_by(userid: user_id).t_stamp
         response = slack_client.update_message(channel_id, ts, '', block)
         set_last_timestamp(response["ts"], user_id)
+    end
+
+    def call_reminder_add_modal(req)
+        # delete command message
+        user_id = req[:user][:id]
+        channel_id = req[:container][:channel_id]
+        ts = @message_model.find_by(userid: user_id).t_stamp
+        slack_client.delete_message(channel_id, ts)
+        @message_model.find_by(userid: user_id).delete
+
+        # generate view
+        trg_id = req[:trigger_id]
+        views = gen_tempolary_add_view
+        slack_client.send_view(trg_id, views)
     end
 
     def show_reminder_db(req)
@@ -147,6 +164,25 @@ class InteractService
         end
     end
 
+    def add_reminder(req)
+        # get values
+        user_id = req[:user][:id]
+        # channel_id = req[:container][:channel_id]
+        val = req[:view][:state][:values]
+        pick_date = val[:rem_date][:datepicker_action][:selected_date]
+        pick_time = val[:rem_time][:timepicker_action][:selected_time]
+        comment = val[:comment][:comment_action][:value]
+        rem_datetime = DateTime.parse("#{pick_date} #{pick_time}")
+        @reminder_model.create(remind_day: rem_datetime.to_s(:db), comment: comment)
+        gen_debug_log("Record Creation Succeeded.")
+
+        # send message to user
+        date_s = rem_datetime.strftime("%Y-%m-%d %H:%M")
+        msg = "リマインダーを `#{date_s}` に設定しました．"
+        response = slack_client.send_msg(user_id, msg)
+        set_last_timestamp(response["ts"], user_id)
+    end
+
     def set_channel(req)
         user_id = req[:user][:id]
         val = req[:view][:state][:values]
@@ -186,6 +222,14 @@ class InteractService
         end
     end
 
+    def delete_recent_message(req)
+        user_id = req[:user][:id]
+        channel = req[:container][:channel_id]
+        ts = @message_model.find_by(userid: user_id).t_stamp
+        slack_client.delete_message(channel, ts)
+        @message_model.find_by(userid: user_id).delete
+    end
+
     def check_weekly_by_id(record_id)
         return @weekly_model.exists?(id: record_id)
     end
@@ -201,15 +245,15 @@ class InteractService
     def get_time_s(hour, min)
         # generate time string
         if hour/10 == 0
-          hour_s = "0#{hour}"
+            hour_s = "0#{hour}"
         else
-          hour_s = "#{hour}"
+            hour_s = "#{hour}"
         end
     
         if min/10 == 0
-          min_s = "0#{min}"
+            min_s = "0#{min}"
         else
-          min_s = "#{min}"
+            min_s = "#{min}"
         end
     
         return "#{hour_s}:#{min_s}"
@@ -239,9 +283,7 @@ class InteractService
     def get_wday_jp(wday)
         case wday
         when 0
-            wday_s = '日曜日'
-        when 1
-            wday_s = '月曜日'
+            wday_s = '日曜日'model delete
         when 2
             wday_s = '火曜日'
         when 3
@@ -258,7 +300,7 @@ class InteractService
     end
 
     def gen_add_view
-        # generate model view
+        # generate modal view
         views = {
             :type => "modal",
             :callback_id => "add_weekly",
@@ -410,6 +452,91 @@ class InteractService
         block.store(:label, { :type => "plain_text", :text => "通知", :emoji => true })
         blocks << block
 
+        views.store(:blocks, blocks)
+        return views
+    end
+
+    def gen_tempolary_add_view
+        # generate modal view
+        views = {
+            :type => "modal",
+            :callback_id => "add_rem",
+            :title => {
+                :type => "plain_text",
+                :text => "新規リマインダー",
+                :emoji => true
+            },
+            :submit => {
+                :type => "plain_text",
+                :text => "Add",
+                :emoji => true
+            },
+            :close => {
+                :type => "plain_text",
+                :text => "Cancel",
+                :emoji => true
+            }
+        }
+
+        t = DateTime.now()
+        date_str = t.strftime("%Y-%m-%d")
+
+        blocks = []
+        block = {
+			:type => "input",
+			:block_id => "rem_date",
+			:element => {
+				:type => "datepicker",
+				:initial_date => "#{date_str}",
+				:placeholder => {
+					:type => "plain_text",
+					:text => "Select a date",
+					:emoji => true
+				},
+				:action_id => "datepicker_action"
+			},
+			:label => {
+				:type => "plain_text",
+				:text => "日付",
+				:emoji => true
+			}
+		}
+        blocks << block
+        block = {
+			:type => "input",
+			:block_id => "rem_time",
+			:element => {
+				:type => "timepicker",
+				:initial_time => "00:00",
+				:placeholder => {
+					:type => "plain_text",
+					:text => "Select time",
+					:emoji => true
+				},
+				:action_id => "timepicker_action"
+			},
+			:label => {
+				:type => "plain_text",
+				:text => "時刻",
+				:emoji => true
+			}
+		}
+        blocks << block
+        block = {
+			:type => "input",
+			:block_id => "comment",
+			:element => {
+				:type => "plain_text_input",
+				:multiline => true,
+				:action_id => "comment_action"
+			},
+			:label => {
+				:type => "plain_text",
+				:text => "コメント",
+				:emoji => true
+			}
+		}
+        blocks << block
         views.store(:blocks, blocks)
         return views
     end
