@@ -37,6 +37,8 @@ class InteractService
             case act_id
             when /\Aregular_/
                 delete_weekly(act_id, user_id, channel_id)
+            when /\Aq_/
+                delete_queue(act_id, user_id, channel_id)
             end
         when 'add_weekly'
             call_weekly_add_modal(req)
@@ -208,17 +210,41 @@ class InteractService
             gen_debug_log("Record Deletion: Succeeded! Deleted record id:#{record_id} from Weekly.")
             
             # update list
-            block = gen_remind_list(@weekly_model.exists?)
+            block = gen_weekly_remind_list(@weekly_model.exists?)
             ts = @message_model.find_by(userid: user_id).t_stamp
             response = slack_client.update_message(channel_id, ts, '', block)
             set_last_timestamp(response["ts"], user_id)
 
-            msg = "定期設定を削除しました．"
-            slack_client.send_msg(user_id, msg)
         else
             gen_debug_log("Record Deletion: Unsuccessful! Record id:#{record_id} does not exist.")
+            ts = @message_model.find_by(userid: user_id).t_stamp
             msg = "レコードが存在しません．"
-            slack_client.send_msg(user_id, msg)
+            response = slack_client.update_message_only(channel_id, ts, msg)
+            set_last_timestamp(response["ts"], user_id)
+        end
+    end
+
+    def delete_queue(act_id, user_id, channel_id)
+        # formatting act_id
+        act_id.slice!('q_')
+        record_id = act_id.to_i
+        # delete record by id
+        if check_queue_by_id(record_id)
+            @reminder_model.destroy_by(id: record_id)
+            gen_debug_log("Record Deletion: Succeeded! Deleted record id:#{record_id} from queue.")
+
+            # update list
+            block = gen_reminder_db_list(@reminder_model.exists?)
+            ts = @message_model.find_by(userid: user_id).t_stamp
+            response = slack_client.update_message(channel_id, ts, '', block)
+            set_last_timestamp(response["ts"], user_id)
+
+        else
+            gen_debug_log("Record Deletion: Unsuccessful! Record id:#{record_id} does not exist.")
+            ts = @message_model.find_by(userid: user_id).t_stamp
+            msg = "レコードが存在しません．"
+            response = slack_client.update_message_only(channel_id, ts, msg)
+            set_last_timestamp(response["ts"], user_id)
         end
     end
 
@@ -232,6 +258,10 @@ class InteractService
 
     def check_weekly_by_id(record_id)
         return @weekly_model.exists?(id: record_id)
+    end
+
+    def check_queue_by_id(record_id)
+        return @reminder_model.exists?(id: record_id)
     end
 
     def set_last_timestamp(ts, user_id)
