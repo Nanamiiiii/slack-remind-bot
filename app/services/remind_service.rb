@@ -11,9 +11,12 @@ class RemindService
     end
 
     def check_reminders
+        gen_debug_log("Checking reminder")
+        gen_debug_log(@today.to_s)
         @reminder_model.find_each do |reminder|
             if datetime_equals(reminder)
                 exec_reminder(reminder)
+                reminder.destroy
             end
         end
     end
@@ -36,8 +39,10 @@ class RemindService
     end
 
     def exec_reminder(reminder)
+        rem_day = reminder.remind_day.to_s
         msg = reminder.comment
-        channel = @channel_model.find_by('reminder').ch_id
+        gen_debug_log("Execute #{rem_day} Comment: #{msg}")
+        channel = @channel_model.find_by(index: 'reminder').ch_id
         @slack_client.send_msg(channel, msg)
     end
 
