@@ -14,16 +14,18 @@ class InteractService
     end
 
     def block_execute(req)
+        ### ===============================================================
         ### action_id reference
-        ### ===================================================
-        ### add_weekly  :    call adding weekly remind view
-        ### show_weekly :    list up weekly reminder
-        ### add_temp    :    call adding temporary reminder (not implemented)
-        ### check_q     :    list up reminder queue
-        ### set_ch      :    setup channel name to remind
+        ### ===============================================================
+        ### add_weekly              :    call adding weekly remind view
+        ### show_weekly             :    list up weekly reminder
+        ### add_temp                :    call adding temporary reminder
+        ### check_q                 :    list up reminder queue
+        ### set_ch                  :    setup channel name to remind
         ###
-        ### delete_rec_regular_{ID}  :   delete weekly reminder by id
-        ### delete_rec_q_{ID}        :   delete reminder from queue by id
+        ### delete_rec_regular_{ID} :    delete weekly reminder by id
+        ### delete_rec_q_{ID}       :    delete reminder from queue by id
+        ### ===============================================================
 
         # get params
         act = req[:actions].first
@@ -80,7 +82,7 @@ class InteractService
         slack_client.delete_message(channel_id, ts)
         @message_model.find_by(userid: user_id).delete
 
-        # generate view
+        # generate modal
         trg_id = req[:trigger_id]
         views = gen_add_view
         slack_client.send_view(trg_id, views)
@@ -103,7 +105,7 @@ class InteractService
         slack_client.delete_message(channel_id, ts)
         @message_model.find_by(userid: user_id).delete
 
-        # generate view
+        # generate modal
         trg_id = req[:trigger_id]
         views = gen_temporary_add_view
         slack_client.send_view(trg_id, views)
@@ -119,6 +121,14 @@ class InteractService
     end
 
     def call_channel_set_modal(req)
+        # delete command message
+        user_id = req[:user][:id]
+        channel_id = req[:container][:channel_id]
+        ts = @message_model.find_by(userid: user_id).t_stamp
+        slack_client.delete_message(channel_id, ts)
+        @message_model.find_by(userid: user_id).delete
+
+        # generate modal
         trg_id = req[:trigger_id]
         views = gen_ch_select
         slack_client.send_view(trg_id, views)
@@ -197,7 +207,8 @@ class InteractService
         end
 
         msg = "`#{selected_ch}` を投稿チャンネルに設定しました．"
-        slack_client.send_msg(user_id, msg)
+        response = slack_client.send_msg(user_id, msg)
+        set_last_timestamp(response["ts"], user_id)
     end
 
     def delete_weekly(act_id, user_id, channel_id)
@@ -271,6 +282,18 @@ class InteractService
             @message_model.create(userid: user_id, t_stamp: ts)
         end
     end
+
+    def slack_client
+        @slack_client ||= Client::SlackClient.new
+    end
+
+    def gen_debug_log(str)
+        puts "[interact_service]: #{str}"
+    end
+
+    # =========================================================
+    # = FROM HERE = Methods generating block, view and string =
+    # =========================================================
 
     def get_time_s(hour, min)
         # generate time string
@@ -731,7 +754,7 @@ class InteractService
             :callback_id => "ch_select",
             :title => {
                 :type => "plain_text",
-                :text => "My App",
+                :text => "投稿チャンネル設定",
                 :emoji => true
             },
             :submit => {
@@ -766,13 +789,5 @@ class InteractService
             ]
         }
         return view
-    end
-
-    def slack_client
-        @slack_client ||= Client::SlackClient.new
-    end
-
-    def gen_debug_log(str)
-        puts "[interact_service]: #{str}"
     end
 end
