@@ -29,6 +29,8 @@ class RemindService
         day = reminder.remind_day.mday
         hour = reminder.remind_day.hour
         min = reminder.remind_day.min
+        
+        printf("%d %d %d %d %d", year, month, day, hour, min)
     
         if year == @today.year && month == @today.month && day == @today.day && hour == @today.hour
             if @today.min - min >= 0 && @today.min - min < 10 # 10分未満の誤差は許容(Heroku Schedulerの不安定性を考慮)
