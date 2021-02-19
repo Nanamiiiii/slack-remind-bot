@@ -25,6 +25,7 @@ class InteractService
         ###
         ### delete_rec_regular_{ID} :    delete weekly reminder by id
         ### delete_rec_q_{ID}       :    delete reminder from queue by id
+        ### edit_rec_q_{ID}         :    edit reminder from queue by id
         ### ===============================================================
 
         # get params
@@ -32,6 +33,7 @@ class InteractService
         act_id = act[:action_id]
         user_id = req[:user][:id]
         channel_id = req[:container][:channel_id]
+        trg_id = req[:trigger_id]
 
         case act_id
         when /\Adelete_rec_/
@@ -41,6 +43,12 @@ class InteractService
                 delete_weekly(act_id, user_id, channel_id)
             when /\Aq_/
                 delete_queue(act_id, user_id, channel_id)
+            end
+        when /\Aedit_rec_/
+            act_id.slice!('edit_rec_')
+            case act_id
+            when /\Aq_/
+                edit_queue(act_id, user_id, channel_id, trg_id)
             end
         when 'add_weekly'
             call_weekly_add_modal(req)
@@ -67,6 +75,8 @@ class InteractService
             add_weekly(req)
         when 'add_rem'
             add_reminder(req)
+        when /\Aedit_rem_/
+            update_reminder(req)
         when 'ch_select'
             set_channel(req)
         end
@@ -195,6 +205,26 @@ class InteractService
         set_last_timestamp(response["ts"], user_id)
     end
 
+    def update_reminder(req)
+        # get values
+        record_id = req[:view][:callback_id].slice!("edit_rem_").to_i
+        user_id = req[:user][:id]
+        # channel_id = req[:container][:channel_id]
+        val = req[:view][:state][:values]
+        pick_date = val[:rem_date][:datepicker_action][:selected_date]
+        pick_time = val[:rem_time][:timepicker_action][:selected_time]
+        comment = val[:comment][:comment_action][:value]
+        rem_datetime = DateTime.parse("#{pick_date} #{pick_time}")
+        @reminder_model.find_by(id: record_id).update(:remind_day rem_datetime.to_s(:db), :comment comment)
+        gen_debug_log("Record Update Succeeded.")
+        
+        # update list
+        block = gen_reminder_db_list(@reminder_model.exists?)
+        ts = @message_model.find_by(userid: user_id).t_stamp
+        response = slack_client.update_message(channel_id, ts, '', block)
+        set_last_timestamp(response["ts"], user_id)
+    end
+
     def set_channel(req)
         user_id = req[:user][:id]
         val = req[:view][:state][:values]
@@ -252,6 +282,24 @@ class InteractService
 
         else
             gen_debug_log("Record Deletion: Unsuccessful! Record id:#{record_id} does not exist.")
+            ts = @message_model.find_by(userid: user_id).t_stamp
+            msg = "レコードが存在しません．"
+            response = slack_client.update_message_only(channel_id, ts, msg)
+            set_last_timestamp(response["ts"], user_id)
+        end
+    end
+
+    def edit_queue(act_id, user_id, channel_id, trg_id)
+        # formatting act_id
+        act_id.slice!('q_')
+        record_id = act_id.to_i
+        # generate editing dialog
+        if check_queue_by_id(record_id)
+            model = @reminder_model.find_by(id: record_id)
+            view = gen_queue_editing_view(model)
+            slack_client.send_view(trg_id, views)
+        else
+            gen_debug_log("Cannot edit record. Record id:#{record_id} does not exist.")
             ts = @message_model.find_by(userid: user_id).t_stamp
             msg = "レコードが存在しません．"
             response = slack_client.update_message_only(channel_id, ts, msg)
@@ -596,6 +644,95 @@ class InteractService
         return views
     end
 
+    def gen_queue_editing_view(model)
+        # generate modal view
+        record_id = model.id
+        views = {
+            :type => "modal",
+            :callback_id => "edit_rem_#{record_id}",
+            :title => {
+                :type => "plain_text",
+                :text => "リマインダー編集",
+                :emoji => true
+            },
+            :submit => {
+                :type => "plain_text",
+                :text => "Apply",
+                :emoji => true
+            },
+            :close => {
+                :type => "plain_text",
+                :text => "Cancel",
+                :emoji => true
+            }
+        }
+
+        t = model.remind_day
+        date_str = t.strftime("%Y-%m-%d")
+        time_str = t.strftime("%H:%M")
+        comment = model.comment
+
+        blocks = []
+        block = {
+			:type => "input",
+			:block_id => "rem_date",
+			:element => {
+				:type => "datepicker",
+				:initial_date => "#{date_str}",
+				:placeholder => {
+					:type => "plain_text",
+					:text => "Select a date",
+					:emoji => true
+				},
+				:action_id => "datepicker_action"
+			},
+			:label => {
+				:type => "plain_text",
+				:text => "日付",
+				:emoji => true
+			}
+		}
+        blocks << block
+        block = {
+			:type => "input",
+			:block_id => "rem_time",
+			:element => {
+				:type => "timepicker",
+				:initial_time => "#{time_str}",
+				:placeholder => {
+					:type => "plain_text",
+					:text => "Select time",
+					:emoji => true
+				},
+				:action_id => "timepicker_action"
+			},
+			:label => {
+				:type => "plain_text",
+				:text => "時刻",
+				:emoji => true
+			}
+		}
+        blocks << block
+        block = {
+			:type => "input",
+			:block_id => "comment",
+			:element => {
+				:type => "plain_text_input",
+				:multiline => true,
+                :initial_value => "#{comment}",
+				:action_id => "comment_action"
+			},
+			:label => {
+				:type => "plain_text",
+				:text => "コメント",
+				:emoji => true
+			}
+		}
+        blocks << block
+        views.store(:blocks, blocks)
+        return views
+    end
+
     def gen_weekly_remind_list(model_presence)
         # generate block kit object
         if model_presence
@@ -714,6 +851,17 @@ class InteractService
                 buttons = {
                     :type => "actions",
                     :elements => [
+                        {
+                            :type => "button",
+                            :text => {
+                                :type => "plain_text",
+                                :text => "編集",
+                                :emoji => true
+                            },
+                            :value => "click_me_123",
+                            :action_id => "edit_rec_q_#{id}",
+                            :style => "primary"
+                        },
                         {
                             :type => "button",
                             :text => {
