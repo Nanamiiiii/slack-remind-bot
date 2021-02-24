@@ -18,9 +18,9 @@ class WeeklyService
         mday = today.mday
 
         # execute only on Sunday
-        if day_of_week != 0
-            return
-        end
+        # if day_of_week != 0
+        #    return
+        #end
 
         @weekly_model.find_each do |model|
             remind_day = model.day
@@ -46,7 +46,7 @@ class WeeklyService
             gen_debug_log(set_date.to_s)
             gen_debug_log(comment)
 
-            set_reminder_record(set_date.to_s(:db), comment)
+            # set_reminder_record(set_date.to_s(:db), comment)
         end    
     end
 
