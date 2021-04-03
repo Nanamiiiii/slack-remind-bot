@@ -46,10 +46,15 @@ class RemindService
         gen_debug_log("Execute #{rem_day} Comment: #{msg}")
         channel = @channel_model.find_by(index: 'reminder').ch_id
         slack_client.send_msg(channel, msg)
+        discord_client.send_msg(msg.gsub("<!channel>", "@channel"))
     end
 
     def slack_client
         @slack_client ||= Client::SlackClient.new
+    end
+
+    def discord_client
+        @discord_client ||= Client::DiscordClient.new
     end
 
     def gen_debug_log(str)

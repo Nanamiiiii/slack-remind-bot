@@ -1,8 +1,7 @@
-require 'faraday'
-
 module Client
     class DiscordClient
         DISCORD_WEBHOOK_URL = ENV['DISCORD_WEBHOOK_URL']
+        
         def initialize()
             @cli = Faraday::Connection.new(:url => 'https://discordapp.com') do |builder|
                 builder.use Faraday::Request::UrlEncoded
