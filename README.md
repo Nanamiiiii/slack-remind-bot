@@ -35,6 +35,7 @@ https://api.slack.com/apps
 * `PORTAL_AUTH_TOKEN` - Portal apiの認証用トークン
 * `VERIFY_WITH` - Portalを使ったユーザー認証をするか（使用する場合は`portal`にする）
 * `DATABASE_URL`
+* `DISCORD_WEBHOOK_URL` - DiscordのWebhookアドレスの`/api`以下
 * Herokuで動かす際はClearDBを導入して，`DB_HOSTNAME` `DB_NAME` `DB_USERNAME` `DB_PASSWORD` `DB_PORT` も設定した
 
 ### Rake Task
