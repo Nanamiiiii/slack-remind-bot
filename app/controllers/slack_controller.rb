@@ -64,6 +64,18 @@ class SlackController < ApplicationController
     
     end
 
+    # POST /event
+    def event
+        body = JSON.parse(request.body.read)
+
+        case body['type']
+        when 'url_verification'
+            render json: body
+        when 'event_callback'
+            
+        end
+    end
+
     def remind_service
         RemindService.new
     end
