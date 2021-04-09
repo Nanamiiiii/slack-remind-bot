@@ -78,5 +78,11 @@ module Client
             }
             @cli.post 'api/chat.delete', snd_data.to_json, {"Content-type" => 'application/json', "Authorization" => "Bearer #{SLACK_BOT_USER_TOKEN}"}
         end
+
+        def get_user_profile(user_id)
+            response = @cli.get("api/users.profile.get?token=#{SLACK_BOT_USER_TOKEN}&user=#{user_id}")
+            puts response.body
+            return response.body
+        end
     end
 end

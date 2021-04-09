@@ -72,7 +72,10 @@ class SlackController < ApplicationController
         when 'url_verification'
             render json: body
         when 'event_callback'
-            
+            case body['event']['type']
+            when 'message'
+                message_event.get_event(body['event'])
+            end
         end
     end
 
@@ -86,6 +89,10 @@ class SlackController < ApplicationController
 
     def interact_service
         InteractService.new
+    end
+
+    def message_event
+        MessageEvent.new
     end
 
     def slack_client
