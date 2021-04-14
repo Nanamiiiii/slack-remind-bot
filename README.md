@@ -3,13 +3,13 @@ Slack等のチャットツールで活動の通知とかをするbotです．
 
 ## 開発環境
 * docker 20.10.2  
-* Ruby 2.7.2  
-* Rails 6.1.1 
+* Ruby <s>2.7.2</s> -> 2.7.3
+* Rails <s>6.1.1</s> -> 6.1.3 
 
 ## ローカルでの開発（puma起動確認まで）
 クローン後にルートディレクトリ内で
 ```
-$ docker-compose build (初回とGemfile変更時のみ)
+$ docker-compose build (初回と再ビルドが必要な変更があったとき)
 $ docker-compose up
 ```
 * ログを垂れ流したくなければ`-d`をつける．  
@@ -25,6 +25,7 @@ https://api.slack.com/apps
 * Bot User OAuth Access Token (xoxb-...) を控える．
 * Slash Command作成 Request URLは `https://<--server url-->/commands`
 * InteractivityをOnにし，Request URLは `https://<--server url-->/interact`
+* Event Subscriptionは `https://<--server url-->/event`
 * Beta featuresを使っているので有効化
 * 最後にWorkspaceにインストールする
 
