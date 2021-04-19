@@ -15,6 +15,9 @@ class MessageEvent
         user_profile = slack_client.get_user_profile(user_id)
 
         user_name = user_profile['profile']['display_name']
+        if user_name == ''
+          user_name = user_profile['profile']['real_name']
+        end
         user_icon = user_profile['profile']['image_72']
 
         snd_data = {
