@@ -1,6 +1,7 @@
 class SlackController < ApplicationController
 
     SLACK_SIGNING_SECRET = ENV['SLACK_SIGNING_SECRET']
+    DISCORD_TRANSPORT_E927 = ENV['DISCORD_TRANSPORT_E927']
 
     # POST /
     def index
@@ -18,7 +19,7 @@ class SlackController < ApplicationController
         this_sig = OpenSSL::HMAC.hexdigest('sha256', SLACK_SIGNING_SECRET, sig_base)
         if !(signature.eql?("v0=#{this_sig}"))
             # verification error
-            render :status => 404
+            render status: 404
             return
         end
 
@@ -40,7 +41,7 @@ class SlackController < ApplicationController
         this_sig = OpenSSL::HMAC.hexdigest('sha256', SLACK_SIGNING_SECRET, sig_base)
         if !(signature.eql?("v0=#{this_sig}"))
             # verification error
-            render :status => 404
+            render status: 404
             return
         end
 
@@ -72,9 +73,13 @@ class SlackController < ApplicationController
         when 'url_verification'
             render json: body
         when 'event_callback'
-            case body['event']['type']
-            when 'message'
-                message_event.get_event(body['event'])
+            if DISCORD_TRANSPORT_E927 == 1
+                case body['event']['type']
+                when 'message'
+                    message_event.get_event(body['event'])
+                end
+            else
+                render status: 200
             end
         end
     end

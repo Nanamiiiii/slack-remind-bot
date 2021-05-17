@@ -1,9 +1,10 @@
 class MessageEvent
+    E927_CHANNEL_ID = ENV['E927_CHANNEL_ID']
 
     def get_event(event)
         channel_id = event['channel']
         case channel_id
-        when 'C04RXGB3N'
+        when E927_CHANNEL_ID
             # channel '#mis_e927'
             send_to_discord_e927(event)
         end
@@ -31,7 +32,7 @@ class MessageEvent
     end
 
     def slack_client
-        @slack_client ||= Client::SlackClient.new()
+        @slack_client ||= Client::SlackClient.new
     end
 
     def discord_client

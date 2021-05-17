@@ -1,5 +1,5 @@
 # mischan-reminder
-Slack等のチャットツールで活動の通知とかをするbotです．   
+Slack等のチャットツールでサークル活動の通知とかをするbotです．   
 
 ## 開発環境
 * docker 20.10.2  
@@ -34,9 +34,11 @@ https://api.slack.com/apps
 * `SLACK_BOT_USER_TOKEN` - Bot User OAuth Access Token
 * `SLACK_SIGNING_SECRET` - Signing Secret
 * `PORTAL_AUTH_TOKEN` - Portal apiの認証用トークン
-* `VERIFY_WITH` - Portalを使ったユーザー認証をするか（使用する場合は`portal`にする）
+* `VERIFY_WITH` - Portalを使ったユーザー認証をするか (for debug)（使用する場合は`portal`にする）
 * `DATABASE_URL`
 * `DISCORD_WEBHOOK_URL` - DiscordのWebhookアドレスの`/api`以下
+* `DISCORD_TRANSPORT_E927` - transportの使用切り替え (1で稼働)
+* `E927_CHANNEL_ID` - 上記のchannel_id(slack)
 * Herokuで動かす際はClearDBを導入して，`DB_HOSTNAME` `DB_NAME` `DB_USERNAME` `DB_PASSWORD` `DB_PORT` も設定した
 
 ### Rake Task
