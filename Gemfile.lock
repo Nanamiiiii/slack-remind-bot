@@ -97,7 +97,7 @@ GEM
     nio4r (2.5.7)
     nokogiri (1.11.3-x86_64-linux)
       racc (~> 1.4)
-    puma (5.2.2)
+    puma (5.3.1)
       nio4r (~> 2.0)
     racc (1.5.2)
     rack (2.2.3)
@@ -160,7 +160,7 @@ DEPENDENCIES
   faraday_middleware
   listen (~> 3.3)
   mysql2 (~> 0.5)
-  puma (~> 5.0)
+  puma (~> 5.3)
   rails (~> 6.1.1)
   spring
   tzinfo-data
